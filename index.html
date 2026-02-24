@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>n0t3.zt</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Roboto:ital,wght@0,300;0,400;1,300&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:ital,wght@0,300;0,400;1,300&family=Syne+Mono&family=Archivo:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -443,8 +443,10 @@
       <span class="sep">·</span>
       <select id="font-select" class="btn" style="padding:4px 6px; cursor:pointer;">
         <option value="fira">Fira Code</option>
-        <option value="garamond">Garamond</option>
-        <option value="roboto">Roboto</option>
+        <option value="lora">Lora</option>
+        <option value="nunito">Nunito</option>
+        <option value="syne">Syne Mono</option>
+        <option value="archivo">Archivo</option>
       </select>
     </div>
     <div id="topbar-right">
@@ -1028,9 +1030,11 @@ $('pomo-stop-btn').addEventListener('click', ()=> stopPomo());
 
 // ── font switcher ──────────────────────────────────────
 const FONTS = {
-  fira:     { family: "'Fira Code', monospace", size: '15px', lh: '1.8'  },
-  garamond: { family: "'EB Garamond', serif",   size: '18px', lh: '1.9'  },
-  roboto:   { family: "'Roboto', sans-serif",   size: '15px', lh: '1.75' },
+  fira:    { family: "'Fira Code', monospace",  size: '15px', lh: '1.8'  },
+  lora:    { family: "'Lora', serif",            size: '17px', lh: '1.9'  },
+  nunito:  { family: "'Nunito', sans-serif",     size: '16px', lh: '1.85' },
+  syne:    { family: "'Syne Mono', monospace",   size: '14px', lh: '1.8'  },
+  archivo: { family: "'Archivo', sans-serif",    size: '15px', lh: '1.75' },
 };
 $('font-select').addEventListener('change', function() {
   const f = FONTS[this.value];
