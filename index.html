@@ -120,13 +120,22 @@
     padding: 52px 0;
     display: flex;
     justify-content: center;
+    align-items: flex-start;
   }
 
-  #page { width: var(--page-width); min-width: 0; }
+  #page {
+    width: var(--page-width);
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
 
   #editor {
     width: 100%;
-    min-height: 60vh;
+    flex: 1;
+    height: auto;
+    min-height: calc(100vh - 200px);
     background: transparent;
     border: none; outline: none;
     color: var(--fg);
@@ -139,6 +148,7 @@
     white-space: pre-wrap;
     word-break: break-word;
     overflow-wrap: break-word;
+    overflow: hidden;
     -webkit-font-smoothing: antialiased;
   }
   #editor::placeholder { color: var(--fg-dimmer); font-style: italic; }
@@ -448,6 +458,11 @@
         <option value="nunito">Nunito</option>
         <option value="syne">Syne Mono</option>
         <option value="archivo">Archivo</option>
+      </select>
+      <select id="size-select" class="btn" style="padding:4px 6px; cursor:pointer;">
+        <option value="s">S</option>
+        <option value="m">M</option>
+        <option value="l">L</option>
       </select>
     </div>
     <div id="topbar-right">
@@ -1029,6 +1044,38 @@ $('pomo-skip-btn').addEventListener('click', ()=>{
 
 $('pomo-stop-btn').addEventListener('click', ()=> stopPomo());
 
+// ── size switcher ──────────────────────────────────────
+const SIZES = {
+  s: { size: '15px', lh: '1.8'  },
+  m: { size: '18px', lh: '1.85' },
+  l: { size: '22px', lh: '1.9'  },
+};
+// per-font base sizes for scaling
+const FONT_BASE_SIZES = {
+  fira:    { s: '15px', m: '18px', l: '22px' },
+  lora:    { s: '17px', m: '20px', l: '24px' },
+  nunito:  { s: '16px', m: '19px', l: '23px' },
+  syne:    { s: '14px', m: '17px', l: '21px' },
+  archivo: { s: '15px', m: '18px', l: '22px' },
+};
+let currentFontKey = 'fira';
+let currentSizeKey = 's';
+
+$('size-select').addEventListener('change', function() {
+  currentSizeKey = this.value;
+  applyFontAndSize();
+});
+
+function applyFontAndSize() {
+  const f = FONTS[currentFontKey];
+  const sz = FONT_BASE_SIZES[currentFontKey][currentSizeKey];
+  const lh = SIZES[currentSizeKey].lh;
+  document.documentElement.style.setProperty('--editor-font', f.family);
+  document.documentElement.style.setProperty('--font-size',   sz);
+  document.documentElement.style.setProperty('--line-height', lh);
+  autoResize();
+}
+
 // ── font switcher ──────────────────────────────────────
 const FONTS = {
   fira:    { family: "'Fira Code', monospace",  size: '15px', lh: '1.8'  },
@@ -1038,11 +1085,18 @@ const FONTS = {
   archivo: { family: "'Archivo', sans-serif",    size: '15px', lh: '1.75' },
 };
 $('font-select').addEventListener('change', function() {
-  const f = FONTS[this.value];
-  document.documentElement.style.setProperty('--editor-font', f.family);
-  document.documentElement.style.setProperty('--font-size',   f.size);
-  document.documentElement.style.setProperty('--line-height', f.lh);
+  currentFontKey = this.value;
+  applyFontAndSize();
 });
+
+// ── auto-resize textarea ───────────────────────────────
+function autoResize() {
+  editor.style.height = 'auto';
+  editor.style.height = Math.max(
+    editor.scrollHeight,
+    $('editor-wrap').clientHeight - 104
+  ) + 'px';
+}
 
 // ── typewriter ─────────────────────────────────────────
 function toggleTypewriter() {
@@ -1400,7 +1454,7 @@ function downloadText(text, filename) {
 }
 
 // ── EDITOR EVENTS ──────────────────────────────────────
-editor.addEventListener('input', updateCounters);
+editor.addEventListener('input', ()=> { updateCounters(); autoResize(); });
 
 editor.addEventListener('select', updateSelectionCounters);
 editor.addEventListener('mouseup', updateSelectionCounters);
@@ -1465,6 +1519,8 @@ window.addEventListener('beforeunload', e=>{
 
 // ── INIT ───────────────────────────────────────────────
 updateCounters();
+autoResize();
+window.addEventListener('resize', autoResize);
 editor.focus();
 </script>
 </body>
