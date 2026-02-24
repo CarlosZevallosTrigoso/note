@@ -116,12 +116,13 @@
   #editor-wrap {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 52px 0;
     display: flex;
     justify-content: center;
   }
 
-  #page { width: var(--page-width); }
+  #page { width: var(--page-width); min-width: 0; }
 
   #editor {
     width: 100%;
@@ -136,7 +137,8 @@
     resize: none;
     caret-color: var(--fg);
     white-space: pre-wrap;
-    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
     -webkit-font-smoothing: antialiased;
   }
   #editor::placeholder { color: var(--fg-dimmer); font-style: italic; }
@@ -439,7 +441,6 @@
       </div>
       <span class="sep">·</span>
       <button class="btn" id="btn-invert">INVERTIR</button>
-      <button class="btn" id="btn-typewriter">MÁQUINA</button>
       <span class="sep">·</span>
       <select id="font-select" class="btn" style="padding:4px 6px; cursor:pointer;">
         <option value="fira">Fira Code</option>
