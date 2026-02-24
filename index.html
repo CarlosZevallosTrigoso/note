@@ -207,6 +207,17 @@
 
   #counters { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 
+  #selection-badge {
+    font-size: 10px;
+    color: var(--bg);
+    background: var(--fg);
+    padding: 2px 8px;
+    letter-spacing: 0.06em;
+    display: none;
+    white-space: nowrap;
+  }
+  #selection-badge.visible { display: inline; }
+
   .stat {
     font-size: 10px;
     color: var(--fg-dim);
@@ -401,6 +412,7 @@
   <!-- STATUS BAR -->
   <div id="statusbar">
     <div id="counters">
+      <span id="selection-badge">SELECCIÓN</span>
       <div class="stat">Palabras <strong id="cnt-words">0</strong></div>
       <div class="stat">Caracteres <strong id="cnt-chars">0</strong></div>
       <div class="stat">Sin espacios <strong id="cnt-chars-ns">0</strong></div>
@@ -1062,6 +1074,31 @@ function downloadText(text, filename) {
 
 // ── EDITOR EVENTS ──────────────────────────────────────
 editor.addEventListener('input', updateCounters);
+
+editor.addEventListener('select', updateSelectionCounters);
+editor.addEventListener('mouseup', updateSelectionCounters);
+editor.addEventListener('keyup', updateSelectionCounters);
+
+function updateSelectionCounters() {
+  const start = editor.selectionStart;
+  const end   = editor.selectionEnd;
+  if (start === end) {
+    // no selection — restore full counters
+    $('selection-badge').classList.remove('visible');
+    updateCounters();
+    return;
+  }
+  const sel = editor.value.slice(start, end);
+  const w   = words(sel);
+  $('selection-badge').classList.add('visible');
+  $('cnt-words').textContent    = w.toLocaleString();
+  $('cnt-chars').textContent    = sel.length.toLocaleString();
+  $('cnt-chars-ns').textContent = sel.replace(/\s/g,'').length.toLocaleString();
+  $('cnt-lines').textContent    = sel.split('\n').length.toLocaleString();
+  $('cnt-paragraphs').textContent = (sel.split(/\n\s*\n/).filter(p=>p.trim()).length||0).toLocaleString();
+  $('cnt-bytes').textContent    = bytes(sel).toLocaleString();
+  $('cnt-readtime').textContent = w===0 ? '0 min' : Math.ceil(w/200)+' min';
+}
 
 editor.addEventListener('paste', e=>{
   e.preventDefault();
