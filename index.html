@@ -115,12 +115,10 @@
   /* ══ EDITOR ══ */
   #editor-wrap {
     flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 52px 0;
+    overflow: hidden;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    padding: 0;
   }
 
   #page {
@@ -128,14 +126,12 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    min-height: 100%;
   }
 
   #editor {
-    width: 100%;
     flex: 1;
-    height: auto;
-    min-height: calc(100vh - 200px);
+    width: 100%;
+    padding: 52px 0;
     background: transparent;
     border: none; outline: none;
     color: var(--fg);
@@ -145,10 +141,10 @@
     line-height: var(--line-height);
     resize: none;
     caret-color: var(--fg);
-    white-space: pre-wrap;
     word-break: break-word;
     overflow-wrap: break-word;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
   }
   #editor::placeholder { color: var(--fg-dimmer); font-style: italic; }
@@ -1073,7 +1069,6 @@ function applyFontAndSize() {
   document.documentElement.style.setProperty('--editor-font', f.family);
   document.documentElement.style.setProperty('--font-size',   sz);
   document.documentElement.style.setProperty('--line-height', lh);
-  autoResize();
 }
 
 // ── font switcher ──────────────────────────────────────
@@ -1089,15 +1084,6 @@ $('font-select').addEventListener('change', function() {
   applyFontAndSize();
 });
 
-// ── auto-resize textarea ───────────────────────────────
-function autoResize() {
-  editor.style.height = 'auto';
-  editor.style.height = Math.max(
-    editor.scrollHeight,
-    $('editor-wrap').clientHeight - 104
-  ) + 'px';
-}
-
 // ── typewriter ─────────────────────────────────────────
 function toggleTypewriter() {
   S.typewriter = !S.typewriter;
@@ -1112,8 +1098,6 @@ function scrollTypewriter() {
   const wrap  = $('editor-wrap');
   wrap.scrollTop = Math.max(0, lineN*26 - wrap.clientHeight/2);
 }
-$('btn-typewriter').addEventListener('click', toggleTypewriter);
-
 // ── CLEAR ─────────────────────────────────────────────
 $('btn-clear').addEventListener('click', ()=>openModal('modal-clear'));
 $('clear-confirm-btn').addEventListener('click', ()=>{
@@ -1454,31 +1438,32 @@ function downloadText(text, filename) {
 }
 
 // ── EDITOR EVENTS ──────────────────────────────────────
-editor.addEventListener('input', ()=> { updateCounters(); autoResize(); });
+editor.addEventListener('input', updateCounters);
 
-editor.addEventListener('select', updateSelectionCounters);
+editor.addEventListener('select',  updateSelectionCounters);
 editor.addEventListener('mouseup', updateSelectionCounters);
-editor.addEventListener('keyup', updateSelectionCounters);
+editor.addEventListener('keyup',   updateSelectionCounters);
 
 function updateSelectionCounters() {
   const start = editor.selectionStart;
   const end   = editor.selectionEnd;
   if (start === end) {
-    // no selection — restore full counters
-    $('selection-badge').classList.remove('visible');
-    updateCounters();
+    if ($('selection-badge').classList.contains('visible')) {
+      $('selection-badge').classList.remove('visible');
+      updateCounters();
+    }
     return;
   }
   const sel = editor.value.slice(start, end);
   const w   = words(sel);
   $('selection-badge').classList.add('visible');
-  $('cnt-words').textContent    = w.toLocaleString();
-  $('cnt-chars').textContent    = sel.length.toLocaleString();
-  $('cnt-chars-ns').textContent = sel.replace(/\s/g,'').length.toLocaleString();
-  $('cnt-lines').textContent    = sel.split('\n').length.toLocaleString();
+  $('cnt-words').textContent      = w.toLocaleString();
+  $('cnt-chars').textContent      = sel.length.toLocaleString();
+  $('cnt-chars-ns').textContent   = sel.replace(/\s/g,'').length.toLocaleString();
+  $('cnt-lines').textContent      = sel.split('\n').length.toLocaleString();
   $('cnt-paragraphs').textContent = (sel.split(/\n\s*\n/).filter(p=>p.trim()).length||0).toLocaleString();
-  $('cnt-bytes').textContent    = bytes(sel).toLocaleString();
-  $('cnt-readtime').textContent = w===0 ? '0 min' : Math.ceil(w/200)+' min';
+  $('cnt-bytes').textContent      = bytes(sel).toLocaleString();
+  $('cnt-readtime').textContent   = w===0 ? '0 min' : Math.ceil(w/200)+' min';
 }
 
 editor.addEventListener('paste', e=>{
@@ -1519,8 +1504,6 @@ window.addEventListener('beforeunload', e=>{
 
 // ── INIT ───────────────────────────────────────────────
 updateCounters();
-autoResize();
-window.addEventListener('resize', autoResize);
 editor.focus();
 </script>
 </body>
