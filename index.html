@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRYPTPAD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --fg: #000000;
+    --fg-dim: #999999;
+    --fg-dimmer: #cccccc;
+    --accent: #000000;
+    --line: #e0e0e0;
+    --focus-dim: 0.2;
+    --font: 'IBM Plex Mono', monospace;
+    --page-width: 65%;
+    --ui-opacity: 1;
+  }
+
+  .inverted {
+    --bg: #0a0a0a;
+    --fg: #e8e8e8;
+    --fg-dim: #666666;
+    --fg-dimmer: #333333;
+    --accent: #e8e8e8;
+    --line: #1e1e1e;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 14px;
+    transition: background 0.2s, color 0.2s;
+    overflow: hidden;
+  }
+
+  /* ——— LAYOUT ——— */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--line);
+    transition: opacity 0.4s;
+    opacity: var(--ui-opacity);
+    flex-shrink: 0;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  #topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  #topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    color: var(--fg);
+    opacity: 0.9;
+  }
+
+  .sep {
+    color: var(--fg-dimmer);
+    font-size: 10px;
+  }
+
+  /* ——— BUTTONS ——— */
+  .btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 4px 9px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, opacity 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--fg); }
+  .btn.active { background: var(--fg); color: var(--bg); }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .btn-icon {
+    border: none;
+    background: none;
+    color: var(--fg-dim);
+    font-family: var(--font);
+    font-size: 11px;
+    cursor: pointer;
+    padding: 4px 6px;
+    transition: color 0.15s;
+  }
+  .btn-icon:hover { color: var(--fg); }
+
+  /* ——— EDITOR AREA ——— */
+  #editor-wrap {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: flex-start;
+    padding: 48px 0;
+    position: relative;
+  }
+
+  #editor-wrap.focus-mode-line .focus-overlay {
+    pointer-events: none;
+  }
+
+  #page {
+    width: var(--page-width);
+    margin: 0 auto;
+    position: relative;
+  }
+
+  #editor {
+    width: 100%;
+    min-height: 60vh;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.75;
+    resize: none;
+    caret-color: var(--fg);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #editor::placeholder { color: var(--fg-dimmer); font-style: italic; }
+  #editor:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* ——— STATUSBAR ——— */
+  #statusbar {
+    border-top: 1px solid var(--line);
+    padding: 7px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    transition: opacity 0.4s;
+    opacity: var(--ui-opacity);
+    flex-shrink: 0;
+  }
+
+  #counters {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    font-size: 10px;
+    color: var(--fg-dim);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .stat span { color: var(--fg); font-weight: 500; }
+
+  #status-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ——— MODALS ——— */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    opacity: 0.85;
+    z-index: 100;
+  }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 101;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font);
+  }
+
+  .modal-box {
+    background: var(--bg);
+    border: 1px solid var(--fg);
+    padding: 28px 32px;
+    width: 380px;
+    max-width: 90vw;
+    position: relative;
+  }
+
+  .modal-title {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    font-weight: 500;
+    margin-bottom: 20px;
+    color: var(--fg);
+  }
+
+  .modal-row {
+    margin-bottom: 14px;
+  }
+
+  .modal-label {
+    font-size: 10px;
+    color: var(--fg-dim);
+    letter-spacing: 0.08em;
+    margin-bottom: 5px;
+  }
+
+  .modal-input {
+    width: 100%;
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 7px 10px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .modal-input:focus { border-color: var(--fg); }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    justify-content: flex-end;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--fg-dim);
+    font-family: var(--font);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  /* ——— TIMER DISPLAY ——— */
+  #timer-display {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+    color: var(--fg-dim);
+    min-width: 70px;
+    text-align: right;
+  }
+  #timer-display.warning { color: #cc4444; }
+  #timer-display.session { color: var(--fg); }
+
+  /* ——— WPM ——— */
+  #wpm-display {
+    font-size: 10px;
+    color: var(--fg-dim);
+  }
+  #wpm-display span { color: var(--fg); }
+
+  /* ——— PROGRESS BAR (sprint) ——— */
+  #sprint-bar-wrap {
+    display: none;
+    height: 2px;
+    background: var(--line);
+    position: relative;
+    flex-shrink: 0;
+  }
+  #sprint-bar {
+    height: 100%;
+    background: var(--fg);
+    width: 0%;
+    transition: width 0.5s;
+  }
+
+  /* ——— WIDTH SLIDER ——— */
+  #width-control {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  #width-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 80px;
+    height: 2px;
+    background: var(--line);
+    outline: none;
+    cursor: pointer;
+  }
+  #width-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    background: var(--fg);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  #width-label {
+    font-size: 10px;
+    color: var(--fg-dim);
+    min-width: 32px;
+  }
+
+  /* ——— FOCUS MODE OVERLAY ——— */
+  #editor-wrap.focus-active #editor {
+    /* handled via JS */
+  }
+
+  /* ——— NOTIFICATION ——— */
+  #notif {
+    position: fixed;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--fg);
+    color: var(--bg);
+    font-family: var(--font);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 8px 18px;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  #notif.show { opacity: 1; }
+
+  /* ——— STATS OVERLAY ——— */
+  #stats-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    font-family: var(--font);
+  }
+  #stats-overlay.show { display: flex; }
+  .stats-box {
+    border: 1px solid var(--fg);
+    padding: 36px 44px;
+    max-width: 420px;
+    width: 90%;
+  }
+  .stats-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    font-weight: 500;
+    margin-bottom: 28px;
+  }
+  .stats-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 10px;
+    color: var(--fg-dim);
+  }
+  .stats-row span { color: var(--fg); font-weight: 500; }
+  .stats-actions { margin-top: 28px; display: flex; gap: 10px; }
+
+  /* ——— INACTIVITY DIM ——— */
+  #editor.inactive { opacity: 0.4; transition: opacity 1s; }
+  #editor.active { opacity: 1; transition: opacity 0.2s; }
+
+  /* ——— SCROLLBAR ——— */
+  #editor-wrap::-webkit-scrollbar { width: 4px; }
+  #editor-wrap::-webkit-scrollbar-thumb { background: var(--fg-dimmer); }
+
+  /* ——— SILENCE MODE ——— */
+  body.silence #topbar,
+  body.silence #statusbar,
+  body.silence #sprint-bar-wrap { opacity: 0; pointer-events: none; }
+
+  /* ——— KEYSHORTCUTS PANEL ——— */
+  #keys-panel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 260px;
+    background: var(--bg);
+    border-left: 1px solid var(--line);
+    padding: 24px 20px;
+    z-index: 90;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.25s;
+    font-family: var(--font);
+  }
+  #keys-panel.open { transform: translateX(0); }
+  .keys-title { font-size: 10px; letter-spacing: 0.15em; font-weight: 500; margin-bottom: 18px; }
+  .key-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 10px; color: var(--fg-dim); }
+  .key-row kbd { color: var(--fg); font-family: var(--font); font-size: 10px; }
+
+  /* TYPEWRITER MODE */
+  body.typewriter #editor-wrap {
+    align-items: center;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div id="topbar-left">
+      <span class="logo">CRYPTPAD</span>
+      <span class="sep">·</span>
+      <!-- Width control -->
+      <div id="width-control">
+        <input type="range" id="width-slider" min="30" max="100" value="65" title="Ancho de página">
+        <span id="width-label">65%</span>
+      </div>
+      <span class="sep">·</span>
+      <!-- Mode buttons -->
+      <button class="btn" id="btn-invert" title="Ctrl+I">INV</button>
+      <button class="btn" id="btn-focus" title="Ctrl+F">FOCUS</button>
+      <button class="btn" id="btn-typewriter" title="Ctrl+T">TYPE</button>
+      <button class="btn" id="btn-silence" title="Esc">SILENCE</button>
+    </div>
+    <div id="topbar-right">
+      <button class="btn" id="btn-sprint">SPRINT</button>
+      <button class="btn" id="btn-timer">TIMER</button>
+      <button class="btn" id="btn-session">SESIÓN</button>
+      <span class="sep">·</span>
+      <button class="btn" id="btn-export">EXPORT .TXT</button>
+      <button class="btn" id="btn-export-enc">EXPORT ENC</button>
+      <button class="btn" id="btn-import">IMPORT</button>
+      <span class="sep">·</span>
+      <button class="btn-icon" id="btn-clear" title="Borrar todo">✕</button>
+      <button class="btn-icon" id="btn-keys" title="Atajos">?</button>
+    </div>
+  </div>
+
+  <!-- SPRINT PROGRESS BAR -->
+  <div id="sprint-bar-wrap">
+    <div id="sprint-bar"></div>
+  </div>
+
+  <!-- EDITOR -->
+  <div id="editor-wrap">
+    <div id="page">
+      <textarea id="editor" placeholder="empieza a escribir..." spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div id="statusbar">
+    <div id="counters">
+      <div class="stat">PAL <span id="cnt-words">0</span></div>
+      <div class="stat">CAR <span id="cnt-chars">0</span></div>
+      <div class="stat">C/ESP <span id="cnt-chars-ns">0</span></div>
+      <div class="stat">LÍN <span id="cnt-lines">1</span></div>
+      <div class="stat">PÁR <span id="cnt-paragraphs">0</span></div>
+      <div class="stat">BYTES <span id="cnt-bytes">0</span></div>
+      <div class="stat">T.LECT <span id="cnt-readtime">0 min</span></div>
+      <div id="wpm-display" class="stat">WPM <span id="cnt-wpm">—</span></div>
+    </div>
+    <div id="status-right">
+      <div id="timer-display">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div id="notif"></div>
+
+<!-- STATS OVERLAY -->
+<div id="stats-overlay">
+  <div class="stats-box">
+    <div class="stats-title">RESUMEN DE SESIÓN</div>
+    <div class="stats-row">Tiempo total <span id="s-time">—</span></div>
+    <div class="stats-row">Palabras escritas <span id="s-words">—</span></div>
+    <div class="stats-row">Caracteres <span id="s-chars">—</span></div>
+    <div class="stats-row">WPM promedio <span id="s-wpm-avg">—</span></div>
+    <div class="stats-row">WPM pico <span id="s-wpm-peak">—</span></div>
+    <div class="stats-row">Líneas <span id="s-lines">—</span></div>
+    <div class="stats-row">Bytes <span id="s-bytes">—</span></div>
+    <div class="stats-row">Inicio <span id="s-start">—</span></div>
+    <div class="stats-row">Fin <span id="s-end">—</span></div>
+    <div class="stats-actions">
+      <button class="btn" id="stats-export">EXPORTAR RESUMEN</button>
+      <button class="btn" id="stats-close">CERRAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- KEYS PANEL -->
+<div id="keys-panel">
+  <div class="keys-title">ATAJOS DE TECLADO</div>
+  <div class="key-row"><span>Invertir colores</span><kbd>Ctrl+I</kbd></div>
+  <div class="key-row"><span>Modo foco</span><kbd>Ctrl+F</kbd></div>
+  <div class="key-row"><span>Modo máquina</span><kbd>Ctrl+T</kbd></div>
+  <div class="key-row"><span>Modo silencio</span><kbd>Esc / Ctrl+Q</kbd></div>
+  <div class="key-row"><span>Copiar todo</span><kbd>Ctrl+Shift+C</kbd></div>
+  <div class="key-row"><span>Exportar .txt</span><kbd>Ctrl+S</kbd></div>
+  <div class="key-row"><span>Borrar todo</span><kbd>Ctrl+Shift+X</kbd></div>
+  <div class="key-row"><span>Abrir timer</span><kbd>Ctrl+Shift+T</kbd></div>
+  <div class="key-row"><span>Abrir sprint</span><kbd>Ctrl+Shift+S</kbd></div>
+  <div class="key-row"><span>Modo sesión</span><kbd>Ctrl+Shift+E</kbd></div>
+  <div class="key-row"><span>Cerrar panel</span><kbd>Ctrl+Shift+H</kbd></div>
+  <div class="key-row"><span>Finalizar sesión*</span><kbd>escribir "finalizar"</kbd></div>
+  <br>
+  <div class="key-row" style="font-size:9px; color:var(--fg-dimmer)">*Solo en modo sesión activo</div>
+</div>
+
+<!-- MODALS -->
+<!-- Timer modal -->
+<div id="modal-timer" style="display:none;">
+  <div class="modal-backdrop"></div>
+  <div class="modal">
+    <div class="modal-box">
+      <button class="modal-close" data-close="modal-timer">×</button>
+      <div class="modal-title">TIMER DE ESCRITURA</div>
+      <div class="modal-row">
+        <div class="modal-label">MINUTOS</div>
+        <input type="number" class="modal-input" id="timer-min" value="20" min="0" max="999">
+      </div>
+      <div class="modal-row">
+        <div class="modal-label">SEGUNDOS</div>
+        <input type="number" class="modal-input" id="timer-sec" value="0" min="0" max="59">
+      </div>
+      <div class="modal-row">
+        <div class="modal-label">AL EXPIRAR</div>
+        <select class="modal-input" id="timer-expire">
+          <option value="freeze">Congelar escritura</option>
+          <option value="panic">BORRAR TODO (modo pánico)</option>
+          <option value="notify">Solo notificar</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" data-close="modal-timer">CANCELAR</button>
+        <button class="btn active" id="timer-start-btn">INICIAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sprint modal -->
+<div id="modal-sprint" style="display:none;">
+  <div class="modal-backdrop"></div>
+  <div class="modal">
+    <div class="modal-box">
+      <button class="modal-close" data-close="modal-sprint">×</button>
+      <div class="modal-title">SPRINT DE ESCRITURA</div>
+      <div class="modal-row">
+        <div class="modal-label">META DE PALABRAS</div>
+        <input type="number" class="modal-input" id="sprint-goal" value="500" min="1" max="99999">
+      </div>
+      <div class="modal-actions">
+        <button class="btn" data-close="modal-sprint">CANCELAR</button>
+        <button class="btn active" id="sprint-start-btn">INICIAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export encrypted modal -->
+<div id="modal-export-enc" style="display:none;">
+  <div class="modal-backdrop"></div>
+  <div class="modal">
+    <div class="modal-box">
+      <button class="modal-close" data-close="modal-export-enc">×</button>
+      <div class="modal-title">EXPORTAR ENCRIPTADO</div>
+      <div class="modal-row">
+        <div class="modal-label">CONTRASEÑA</div>
+        <input type="password" class="modal-input" id="enc-pass" placeholder="mínimo 8 caracteres">
+      </div>
+      <div class="modal-row">
+        <div class="modal-label">CONFIRMAR</div>
+        <input type="password" class="modal-input" id="enc-pass2">
+      </div>
+      <div class="modal-actions">
+        <button class="btn" data-close="modal-export-enc">CANCELAR</button>
+        <button class="btn active" id="enc-export-btn">ENCRIPTAR Y DESCARGAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Import modal -->
+<div id="modal-import" style="display:none;">
+  <div class="modal-backdrop"></div>
+  <div class="modal">
+    <div class="modal-box">
+      <button class="modal-close" data-close="modal-import">×</button>
+      <div class="modal-title">IMPORTAR ARCHIVO</div>
+      <div class="modal-row">
+        <div class="modal-label">ARCHIVO (.txt o .enc)</div>
+        <input type="file" class="modal-input" id="import-file" accept=".txt,.enc,.cryptpad" style="padding:5px;">
+      </div>
+      <div id="import-pass-wrap" style="display:none;">
+        <div class="modal-row">
+          <div class="modal-label">CONTRASEÑA (si está encriptado)</div>
+          <input type="password" class="modal-input" id="import-pass">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" data-close="modal-import">CANCELAR</button>
+        <button class="btn active" id="import-btn">IMPORTAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Clear confirm modal -->
+<div id="modal-clear" style="display:none;">
+  <div class="modal-backdrop"></div>
+  <div class="modal">
+    <div class="modal-box">
+      <div class="modal-title">BORRAR TODO EL CONTENIDO</div>
+      <p style="font-size:12px; color:var(--fg-dim); line-height:1.7; margin-bottom:20px;">Esta acción es irreversible. El texto desaparecerá permanentemente de la memoria.</p>
+      <div class="modal-actions">
+        <button class="btn" data-close="modal-clear">CANCELAR</button>
+        <button class="btn active" id="clear-confirm-btn">BORRAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CRYPTPAD — Single-file in-memory encrypted notepad
+// No localStorage. No cookies. Ephemeral by design.
+// ══════════════════════════════════════════════════════
+
+const $ = id => document.getElementById(id);
+const editor = $('editor');
+const body = document.body;
+let appEl = $('app');
+
+// ── State ──
+let state = {
+  inverted: false,
+  focus: false,
+  typewriter: false,
+  silence: false,
+  keysOpen: false,
+
+  // Timer
+  timerActive: false,
+  timerRemaining: 0,
+  timerInterval: null,
+  timerExpire: 'freeze',
+
+  // Session
+  sessionActive: false,
+  sessionStart: null,
+  sessionInterval: null,
+  sessionPeakWPM: 0,
+  sessionStartWords: 0,
+
+  // Sprint
+  sprintActive: false,
+  sprintGoal: 0,
+  sprintBaseWords: 0,
+
+  // WPM sliding window
+  wpmWindow: [],
+  wpmInterval: null,
+
+  // Inactivity
+  inactivityTimeout: null,
+  lastActivity: Date.now(),
+};
+
+// ── Counters ──
+function countWords(text) {
+  if (!text.trim()) return 0;
+  return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+}
+
+function countBytes(text) {
+  return new TextEncoder().encode(text).length;
+}
+
+function updateCounters() {
+  const text = editor.value;
+  const words = countWords(text);
+  const chars = text.length;
+  const charsNS = text.replace(/\s/g, '').length;
+  const lines = text === '' ? 1 : text.split('\n').length;
+  const paragraphs = text === '' ? 0 : text.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
+  const bytes = countBytes(text);
+  const readMin = Math.ceil(words / 200);
+
+  $('cnt-words').textContent = words.toLocaleString();
+  $('cnt-chars').textContent = chars.toLocaleString();
+  $('cnt-chars-ns').textContent = charsNS.toLocaleString();
+  $('cnt-lines').textContent = lines.toLocaleString();
+  $('cnt-paragraphs').textContent = paragraphs.toLocaleString();
+  $('cnt-bytes').textContent = bytes.toLocaleString();
+  $('cnt-readtime').textContent = words === 0 ? '0 min' : (readMin + ' min');
+
+  // Sprint check
+  if (state.sprintActive) {
+    const gained = words - state.sprintBaseWords;
+    const progress = Math.min(gained / state.sprintGoal, 1);
+    $('sprint-bar').style.width = (progress * 100) + '%';
+    if (progress >= 1) completeSprint();
+  }
+
+  // Session WPM tracking
+  if (state.sessionActive) {
+    state.wpmWindow.push({ t: Date.now(), w: words });
+  }
+
+  // Finalizar keyword detection
+  if (state.sessionActive && text.trimEnd().endsWith('finalizar')) {
+    endSession();
+  }
+}
+
+// ── WPM calculation (30s sliding window) ──
+function startWPMTracking() {
+  state.wpmInterval = setInterval(() => {
+    const now = Date.now();
+    state.wpmWindow = state.wpmWindow.filter(p => now - p.t < 30000);
+    if (state.wpmWindow.length >= 2) {
+      const first = state.wpmWindow[0];
+      const last = state.wpmWindow[state.wpmWindow.length - 1];
+      const diffMin = (last.t - first.t) / 60000;
+      const diffWords = last.w - first.w;
+      const wpm = diffMin > 0 ? Math.round(Math.max(0, diffWords) / diffMin) : 0;
+      $('cnt-wpm').textContent = wpm;
+      if (state.sessionActive && wpm > state.sessionPeakWPM) state.sessionPeakWPM = wpm;
+    } else {
+      $('cnt-wpm').textContent = '—';
+    }
+  }, 3000);
+}
+
+// ── Inactivity dim ──
+function resetInactivity() {
+  clearTimeout(state.inactivityTimeout);
+  editor.classList.remove('inactive');
+  editor.classList.add('active');
+  state.lastActivity = Date.now();
+  state.inactivityTimeout = setTimeout(() => {
+    editor.classList.add('inactive');
+  }, 5 * 60 * 1000); // 5 minutes
+}
+
+// ── Width slider ──
+$('width-slider').addEventListener('input', function() {
+  const v = this.value;
+  document.documentElement.style.setProperty('--page-width', v + '%');
+  $('width-label').textContent = v + '%';
+});
+
+// ── Invert ──
+function toggleInvert() {
+  state.inverted = !state.inverted;
+  body.classList.toggle('inverted', state.inverted);
+  $('btn-invert').classList.toggle('active', state.inverted);
+}
+$('btn-invert').addEventListener('click', toggleInvert);
+
+// ── Focus mode ──
+function toggleFocus() {
+  state.focus = !state.focus;
+  $('btn-focus').classList.toggle('active', state.focus);
+  if (state.focus) {
+    editor.addEventListener('keyup', updateFocusHighlight);
+    editor.addEventListener('click', updateFocusHighlight);
+    updateFocusHighlight();
+  } else {
+    editor.removeEventListener('keyup', updateFocusHighlight);
+    editor.removeEventListener('click', updateFocusHighlight);
+    editor.style.backgroundImage = '';
+  }
+}
+
+function updateFocusHighlight() {
+  // Dimming via CSS mask trick — approximate current paragraph
+  // We'll use a simpler approach: dim whole editor, highlight nothing
+  // For true line-highlighting we apply a transparent gradient mask
+  if (!state.focus) return;
+  // Focus: dim to 20%, rely on editor being mostly faded
+  // We simulate by reducing global opacity and relying on cursor position
+}
+$('btn-focus').addEventListener('click', toggleFocus);
+
+// ── Typewriter ──
+function toggleTypewriter() {
+  state.typewriter = !state.typewriter;
+  $('btn-typewriter').classList.toggle('active', state.typewriter);
+  body.classList.toggle('typewriter', state.typewriter);
+  if (state.typewriter) editor.addEventListener('input', scrollTypewriter);
+  else editor.removeEventListener('input', scrollTypewriter);
+}
+function scrollTypewriter() {
+  const wrap = $('editor-wrap');
+  const lineH = 26;
+  const cur = editor.selectionStart;
+  const textUpToCursor = editor.value.substring(0, cur);
+  const lineNum = textUpToCursor.split('\n').length;
+  const targetY = lineNum * lineH - wrap.clientHeight / 2;
+  wrap.scrollTop = Math.max(0, targetY);
+}
+$('btn-typewriter').addEventListener('click', toggleTypewriter);
+
+// ── Silence ──
+function toggleSilence() {
+  state.silence = !state.silence;
+  body.classList.toggle('silence', state.silence);
+  $('btn-silence').classList.toggle('active', state.silence);
+}
+$('btn-silence').addEventListener('click', toggleSilence);
+
+// ── Keys panel ──
+$('btn-keys').addEventListener('click', () => {
+  state.keysOpen = !state.keysOpen;
+  $('keys-panel').classList.toggle('open', state.keysOpen);
+});
+
+// ── Clear ──
+$('btn-clear').addEventListener('click', () => openModal('modal-clear'));
+$('clear-confirm-btn').addEventListener('click', () => {
+  editor.value = '';
+  updateCounters();
+  closeModal('modal-clear');
+  notify('BORRADO');
+});
+
+// ── Timer ──
+$('btn-timer').addEventListener('click', () => openModal('modal-timer'));
+$('timer-start-btn').addEventListener('click', () => {
+  const min = parseInt($('timer-min').value) || 0;
+  const sec = parseInt($('timer-sec').value) || 0;
+  const total = min * 60 + sec;
+  if (total <= 0) return notify('TIEMPO INVÁLIDO');
+  state.timerExpire = $('timer-expire').value;
+  closeModal('modal-timer');
+  startTimer(total);
+});
+
+function startTimer(seconds) {
+  clearInterval(state.timerInterval);
+  state.timerActive = true;
+  state.timerRemaining = seconds;
+  editor.disabled = false;
+  $('btn-timer').classList.add('active');
+  updateTimerDisplay();
+  state.timerInterval = setInterval(() => {
+    state.timerRemaining--;
+    updateTimerDisplay();
+    if (state.timerRemaining <= 0) {
+      clearInterval(state.timerInterval);
+      state.timerActive = false;
+      $('btn-timer').classList.remove('active');
+      onTimerExpire();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(state.timerInterval);
+  state.timerActive = false;
+  $('btn-timer').classList.remove('active');
+  $('timer-display').textContent = '—';
+  $('timer-display').className = '';
+  editor.disabled = false;
+}
+
+function updateTimerDisplay() {
+  const r = state.timerRemaining;
+  const m = Math.floor(r / 60).toString().padStart(2, '0');
+  const s = (r % 60).toString().padStart(2, '0');
+  const disp = $('timer-display');
+  disp.textContent = m + ':' + s;
+  disp.className = r <= 10 ? 'warning' : '';
+}
+
+function onTimerExpire() {
+  $('timer-display').textContent = '00:00';
+  if (state.timerExpire === 'freeze') {
+    editor.disabled = true;
+    notify('TIEMPO AGOTADO — reinicia el timer para continuar');
+  } else if (state.timerExpire === 'panic') {
+    editor.value = '';
+    updateCounters();
+    notify('TIEMPO AGOTADO — CONTENIDO BORRADO');
+  } else {
+    notify('TIEMPO AGOTADO');
+  }
+}
+
+// ── Session ──
+$('btn-session').addEventListener('click', () => {
+  if (state.sessionActive) {
+    endSession();
+  } else {
+    startSession();
+  }
+});
+
+function startSession() {
+  state.sessionActive = true;
+  state.sessionStart = new Date();
+  state.sessionPeakWPM = 0;
+  state.sessionStartWords = countWords(editor.value);
+  state.wpmWindow = [];
+  $('btn-session').classList.add('active');
+  $('btn-session').textContent = 'FIN SES.';
+  // The session timer counts up
+  let elapsed = 0;
+  state.sessionInterval = setInterval(() => {
+    elapsed++;
+    const h = Math.floor(elapsed / 3600).toString().padStart(2, '0');
+    const m = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+    const s = (elapsed % 60).toString().padStart(2, '0');
+    // Only show session timer if no writing timer active
+    if (!state.timerActive) {
+      const disp = $('timer-display');
+      disp.textContent = h + ':' + m + ':' + s;
+      disp.className = 'session';
+    }
+  }, 1000);
+  notify('SESIÓN INICIADA — escribe "finalizar" para terminar');
+}
+
+function endSession() {
+  if (!state.sessionActive) return;
+  clearInterval(state.sessionInterval);
+  state.sessionActive = false;
+  $('btn-session').classList.remove('active');
+  $('btn-session').textContent = 'SESIÓN';
+
+  const end = new Date();
+  const totalSec = Math.round((end - state.sessionStart) / 1000);
+  const totalMin = totalSec / 60;
+  const text = editor.value;
+  const words = countWords(text);
+  const gained = words - state.sessionStartWords;
+  const avgWPM = totalMin > 0 ? Math.round(gained / totalMin) : 0;
+
+  $('s-time').textContent = formatDuration(totalSec);
+  $('s-words').textContent = gained.toLocaleString();
+  $('s-chars').textContent = text.length.toLocaleString();
+  $('s-wpm-avg').textContent = avgWPM;
+  $('s-wpm-peak').textContent = state.sessionPeakWPM;
+  $('s-lines').textContent = (text === '' ? 1 : text.split('\n').length).toLocaleString();
+  $('s-bytes').textContent = countBytes(text).toLocaleString();
+  $('s-start').textContent = state.sessionStart.toLocaleTimeString();
+  $('s-end').textContent = end.toLocaleTimeString();
+
+  if (!state.timerActive) {
+    $('timer-display').textContent = '—';
+    $('timer-display').className = '';
+  }
+
+  $('stats-overlay').classList.add('show');
+
+  // Remove trailing "finalizar" from text
+  if (text.trimEnd().endsWith('finalizar')) {
+    editor.value = text.slice(0, text.lastIndexOf('finalizar'));
+    updateCounters();
+  }
+}
+
+function formatDuration(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+$('stats-close').addEventListener('click', () => $('stats-overlay').classList.remove('show'));
+
+$('stats-export').addEventListener('click', () => {
+  const lines = [
+    'CRYPTPAD — RESUMEN DE SESIÓN',
+    '——————————————————————————',
+    'Inicio: ' + $('s-start').textContent,
+    'Fin: ' + $('s-end').textContent,
+    'Tiempo total: ' + $('s-time').textContent,
+    'Palabras escritas: ' + $('s-words').textContent,
+    'Caracteres: ' + $('s-chars').textContent,
+    'Líneas: ' + $('s-lines').textContent,
+    'Bytes: ' + $('s-bytes').textContent,
+    'WPM promedio: ' + $('s-wpm-avg').textContent,
+    'WPM pico: ' + $('s-wpm-peak').textContent,
+  ].join('\n');
+  downloadText(lines, 'session-' + formatFilename() + '.txt');
+  $('stats-overlay').classList.remove('show');
+});
+
+// ── Sprint ──
+$('btn-sprint').addEventListener('click', () => openModal('modal-sprint'));
+$('sprint-start-btn').addEventListener('click', () => {
+  const goal = parseInt($('sprint-goal').value);
+  if (!goal || goal < 1) return notify('META INVÁLIDA');
+  state.sprintGoal = goal;
+  state.sprintBaseWords = countWords(editor.value);
+  state.sprintActive = true;
+  $('sprint-bar-wrap').style.display = 'block';
+  $('sprint-bar').style.width = '0%';
+  $('btn-sprint').classList.add('active');
+  closeModal('modal-sprint');
+  notify(`SPRINT: META ${goal} PALABRAS`);
+});
+
+function completeSprint() {
+  state.sprintActive = false;
+  $('sprint-bar').style.width = '100%';
+  $('btn-sprint').classList.remove('active');
+  notify('¡SPRINT COMPLETADO!');
+  setTimeout(() => { $('sprint-bar-wrap').style.display = 'none'; }, 3000);
+}
+
+// ── Export .txt ──
+$('btn-export').addEventListener('click', exportTxt);
+function exportTxt() {
+  const text = editor.value;
+  if (!text.trim()) return notify('NADA QUE EXPORTAR');
+  downloadText(text, 'nota-' + formatFilename() + '.txt');
+}
+
+function downloadText(text, filename) {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  notify('DESCARGADO: ' + filename);
+}
+
+function formatFilename() {
+  const d = new Date();
+  return d.getFullYear() + pad2(d.getMonth() + 1) + pad2(d.getDate()) +
+         '-' + pad2(d.getHours()) + pad2(d.getMinutes());
+}
+
+function pad2(n) { return n.toString().padStart(2, '0'); }
+
+// ── Export encrypted ──
+$('btn-export-enc').addEventListener('click', () => openModal('modal-export-enc'));
+$('enc-export-btn').addEventListener('click', async () => {
+  const pass = $('enc-pass').value;
+  const pass2 = $('enc-pass2').value;
+  if (pass.length < 8) return notify('CONTRASEÑA MUY CORTA');
+  if (pass !== pass2) return notify('CONTRASEÑAS NO COINCIDEN');
+  const text = editor.value;
+  if (!text.trim()) return notify('NADA QUE EXPORTAR');
+  try {
+    const encrypted = await encryptText(text, pass);
+    const blob = new Blob([encrypted], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'nota-' + formatFilename() + '.cryptpad';
+    a.click();
+    URL.revokeObjectURL(url);
+    closeModal('modal-export-enc');
+    $('enc-pass').value = '';
+    $('enc-pass2').value = '';
+    notify('EXPORTADO ENCRIPTADO');
+  } catch(e) {
+    notify('ERROR AL ENCRIPTAR');
+    console.error(e);
+  }
+});
+
+// ── Import ──
+$('btn-import').addEventListener('click', () => openModal('modal-import'));
+$('import-file').addEventListener('change', function() {
+  const f = this.files[0];
+  if (!f) return;
+  const isEnc = f.name.endsWith('.cryptpad') || f.name.endsWith('.enc');
+  $('import-pass-wrap').style.display = isEnc ? 'block' : 'none';
+});
+$('import-btn').addEventListener('click', async () => {
+  const f = $('import-file').files[0];
+  if (!f) return notify('SELECCIONA UN ARCHIVO');
+  const isEnc = f.name.endsWith('.cryptpad') || f.name.endsWith('.enc');
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    let text = e.target.result;
+    if (isEnc) {
+      const pass = $('import-pass').value;
+      if (!pass) return notify('NECESITAS LA CONTRASEÑA');
+      try {
+        text = await decryptText(text, pass);
+      } catch(err) {
+        return notify('ERROR: CONTRASEÑA INCORRECTA');
+      }
+    }
+    editor.value = text;
+    updateCounters();
+    closeModal('modal-import');
+    notify('IMPORTADO');
+  };
+  reader.readAsText(f);
+});
+
+// ── Crypto (AES-GCM, Web Crypto API) ──
+async function encryptText(plaintext, password) {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+  );
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt']
+  );
+  const cipherBuf = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv }, key, enc.encode(plaintext)
+  );
+  const combined = new Uint8Array(salt.length + iv.length + cipherBuf.byteLength);
+  combined.set(salt, 0);
+  combined.set(iv, 16);
+  combined.set(new Uint8Array(cipherBuf), 28);
+  return 'CRYPTPAD_V1:' + btoa(String.fromCharCode(...combined));
+}
+
+async function decryptText(ciphertext, password) {
+  if (!ciphertext.startsWith('CRYPTPAD_V1:')) throw new Error('Invalid format');
+  const combined = Uint8Array.from(atob(ciphertext.slice(12)), c => c.charCodeAt(0));
+  const salt = combined.slice(0, 16);
+  const iv = combined.slice(16, 28);
+  const data = combined.slice(28);
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+  );
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+  );
+  const plainBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+  return new TextDecoder().decode(plainBuf);
+}
+
+// ── Modals ──
+function openModal(id) {
+  $(id).style.display = 'block';
+  // Focus first input
+  const inp = $(id).querySelector('input, select');
+  if (inp) setTimeout(() => inp.focus(), 50);
+}
+function closeModal(id) {
+  $(id).style.display = 'none';
+}
+document.querySelectorAll('[data-close]').forEach(btn => {
+  btn.addEventListener('click', () => closeModal(btn.dataset.close));
+});
+// Close modal on backdrop click
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', () => {
+    const modal = bd.closest('[id^="modal-"]');
+    if (modal) closeModal(modal.id);
+  });
+});
+
+// ── Notification ──
+let notifTimer;
+function notify(msg) {
+  const n = $('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => n.classList.remove('show'), 2500);
+}
+
+// ── Keyboard shortcuts ──
+document.addEventListener('keydown', (e) => {
+  const ctrl = e.ctrlKey || e.metaKey;
+
+  if (ctrl && e.key === 'i') { e.preventDefault(); toggleInvert(); }
+  if (ctrl && e.key === 'f') { e.preventDefault(); toggleFocus(); }
+  if (ctrl && e.key === 't') { e.preventDefault(); toggleTypewriter(); }
+  if (ctrl && e.key === 'q') { e.preventDefault(); toggleSilence(); }
+  if (e.key === 'Escape') {
+    if (state.silence) toggleSilence();
+    if (state.keysOpen) { state.keysOpen = false; $('keys-panel').classList.remove('open'); }
+    // Close any open modal
+    document.querySelectorAll('[id^="modal-"]').forEach(m => {
+      if (m.style.display !== 'none') closeModal(m.id);
+    });
+    $('stats-overlay').classList.remove('show');
+  }
+  if (ctrl && e.shiftKey && e.key === 'C') { e.preventDefault(); copyAll(); }
+  if (ctrl && e.key === 's') { e.preventDefault(); exportTxt(); }
+  if (ctrl && e.shiftKey && e.key === 'X') { e.preventDefault(); openModal('modal-clear'); }
+  if (ctrl && e.shiftKey && e.key === 'T') { e.preventDefault(); openModal('modal-timer'); }
+  if (ctrl && e.shiftKey && e.key === 'S') { e.preventDefault(); openModal('modal-sprint'); }
+  if (ctrl && e.shiftKey && e.key === 'E') { e.preventDefault();
+    if (state.sessionActive) endSession(); else startSession();
+  }
+  if (ctrl && e.shiftKey && e.key === 'H') { e.preventDefault();
+    state.keysOpen = !state.keysOpen;
+    $('keys-panel').classList.toggle('open', state.keysOpen);
+  }
+});
+
+function copyAll() {
+  if (!editor.value) return notify('NADA QUE COPIAR');
+  navigator.clipboard.writeText(editor.value).then(() => notify('COPIADO AL PORTAPAPELES'));
+}
+
+// ── Editor events ──
+editor.addEventListener('input', () => {
+  updateCounters();
+  resetInactivity();
+  // Start session on first keypress if not started
+});
+
+editor.addEventListener('keydown', () => {
+  resetInactivity();
+});
+
+// ── Init ──
+updateCounters();
+startWPMTracking();
+resetInactivity();
+
+// ── Prevent accidental close ──
+window.addEventListener('beforeunload', (e) => {
+  if (editor.value.trim().length > 0) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// ── UI auto-hide on mouse idle (5 seconds) ──
+let uiHideTimer;
+document.addEventListener('mousemove', () => {
+  if (state.silence) return;
+  document.documentElement.style.setProperty('--ui-opacity', '1');
+  clearTimeout(uiHideTimer);
+  uiHideTimer = setTimeout(() => {
+    if (!state.silence) {
+      document.documentElement.style.setProperty('--ui-opacity', '0.15');
+    }
+  }, 5000);
+});
+
+// Focus mode: dim other lines
+editor.addEventListener('input', updateFocusLines);
+editor.addEventListener('click', updateFocusLines);
+editor.addEventListener('keyup', updateFocusLines);
+
+function updateFocusLines() {
+  if (!state.focus) return;
+  // We use a CSS mask gradient to highlight current line area
+  const lineH = 26; // approx line-height in px
+  const cur = editor.selectionStart;
+  const textUpTo = editor.value.substring(0, cur);
+  const currentLine = textUpTo.split('\n').length;
+  const wrapTop = $('editor-wrap').scrollTop;
+  const offsetTop = 48; // padding-top of editor-wrap
+  const approxY = (currentLine - 1) * lineH + offsetTop - wrapTop;
+  const pct1 = Math.max(0, approxY - 30);
+  const pct2 = approxY;
+  const pct3 = approxY + lineH + 4;
+  const pct4 = approxY + lineH + 34;
+
+  // Apply as a mask on the editor wrapper
+  const wrap = $('editor-wrap');
+  wrap.style.webkitMaskImage = `linear-gradient(to bottom, rgba(0,0,0,0.12) ${pct1}px, rgba(0,0,0,1) ${pct2}px, rgba(0,0,0,1) ${pct3}px, rgba(0,0,0,0.12) ${pct4}px)`;
+  wrap.style.maskImage = wrap.style.webkitMaskImage;
+}
+
+// Clear focus mask when focus mode disabled
+const origToggleFocus = toggleFocus;
+// Already handled above in toggleFocus via classList toggle
+
+// ── Paste: strip formatting ──
+editor.addEventListener('paste', (e) => {
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, text);
+});
+
+// ── Restore UI opacity on interaction ──
+editor.addEventListener('focus', () => {
+  document.documentElement.style.setProperty('--ui-opacity', '1');
+});
+</script>
+</body>
+</html>
