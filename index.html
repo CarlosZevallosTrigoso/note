@@ -360,7 +360,7 @@
       <span class="logo">n0t3.zt</span>
       <span class="sep">·</span>
       <div id="width-control">
-        <input type="range" id="width-slider" min="30" max="100" value="65">
+        <input type="range" id="width-slider" min="30" max="95" value="65">
         <span id="width-label">65%</span>
       </div>
       <span class="sep">·</span>
@@ -881,9 +881,21 @@ $('stats-export').addEventListener('click', ()=>{
 
 // ── SPRINT ─────────────────────────────────────────────
 $('btn-sprint').addEventListener('click', ()=>{
+  if (S.sprintFrozen) { resumeFromSprint(); return; }
   if (S.sprintActive) { endSprint(); return; }
   openModal('modal-sprint');
 });
+
+function resumeFromSprint() {
+  S.sprintFrozen=false;
+  editor.disabled=false;
+  editor.focus();
+  $('btn-sprint').classList.remove('active');
+  $('btn-sprint').textContent='SPRINT';
+  $('sprint-bar-wrap').style.display='none';
+  $('sprint-bar').style.background='var(--fg)';
+  notify('ESCRITURA REANUDADA');
+}
 $('sprint-start-btn').addEventListener('click', ()=>{
   const goal = parseInt($('sprint-goal').value);
   if (!goal||goal<1) return notify('META INVÁLIDA');
@@ -900,21 +912,25 @@ $('sprint-start-btn').addEventListener('click', ()=>{
 });
 
 function completeSprint() {
+  S.sprintActive=false;
+  $('sprint-bar').style.background='#22aa55';
+
   if (S.sprintExpire==='freeze') {
     editor.disabled=true;
-    $('sprint-bar').style.background='#22aa55';
-    notify('¡SPRINT COMPLETADO! Escritura congelada.', 4000);
+    $('btn-sprint').classList.add('active');
+    $('btn-sprint').textContent='REANUDAR ESCRITURA';
+    // next click on btn-sprint will unfreeze
+    S.sprintFrozen=true;
+    notify('¡SPRINT COMPLETADO! Pulsa REANUDAR ESCRITURA para continuar.', 5000);
   } else {
-    $('sprint-bar').style.background='#22aa55';
+    $('btn-sprint').classList.remove('active');
+    $('btn-sprint').textContent='SPRINT';
     notify('¡SPRINT COMPLETADO! Puedes seguir escribiendo.', 4000);
+    setTimeout(()=>{
+      $('sprint-bar-wrap').style.display='none';
+      $('sprint-bar').style.background='var(--fg)';
+    }, 5000);
   }
-  S.sprintActive=false;
-  $('btn-sprint').classList.remove('active');
-  $('btn-sprint').textContent='SPRINT';
-  setTimeout(()=>{
-    $('sprint-bar-wrap').style.display='none';
-    $('sprint-bar').style.background='var(--fg)';
-  }, 5000);
 }
 
 function endSprint() {
