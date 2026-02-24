@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>n0t3.zt</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Roboto:ital,wght@0,300;0,400;1,300&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -15,7 +15,9 @@
     --fg-dim: #888888;
     --fg-dimmer: #cccccc;
     --line: #e0e0e0;
-    --font: 'IBM Plex Mono', monospace;
+    --font: 'Fira Code', monospace;
+    --font-size: 15px;
+    --line-height: 1.8;
     --page-width: 65%;
   }
 
@@ -127,9 +129,9 @@
     border: none; outline: none;
     color: var(--fg);
     font-family: var(--font);
-    font-size: 15px;
+    font-size: var(--font-size);
     font-weight: 300;
-    line-height: 1.8;
+    line-height: var(--line-height);
     resize: none;
     caret-color: var(--fg);
     white-space: pre-wrap;
@@ -377,6 +379,12 @@
       <span class="sep">·</span>
       <button class="btn" id="btn-invert">INVERTIR</button>
       <button class="btn" id="btn-typewriter">MÁQUINA</button>
+      <span class="sep">·</span>
+      <select id="font-select" class="btn" style="padding:4px 6px; cursor:pointer;">
+        <option value="fira">Fira Code</option>
+        <option value="garamond">Garamond</option>
+        <option value="roboto">Roboto</option>
+      </select>
     </div>
     <div id="topbar-right">
       <button class="btn" id="btn-sprint">SPRINT</button>
@@ -716,6 +724,19 @@ function toggleInvert() {
   $('btn-invert').classList.toggle('active', S.inverted);
 }
 $('btn-invert').addEventListener('click', toggleInvert);
+
+// ── font switcher ──────────────────────────────────────
+const FONTS = {
+  fira:     { family: "'Fira Code', monospace", size: '15px', lh: '1.8'  },
+  garamond: { family: "'EB Garamond', serif",   size: '18px', lh: '1.9'  },
+  roboto:   { family: "'Roboto', sans-serif",   size: '15px', lh: '1.75' },
+};
+$('font-select').addEventListener('change', function() {
+  const f = FONTS[this.value];
+  document.documentElement.style.setProperty('--font',        f.family);
+  document.documentElement.style.setProperty('--font-size',   f.size);
+  document.documentElement.style.setProperty('--line-height', f.lh);
+});
 
 // ── typewriter ─────────────────────────────────────────
 function toggleTypewriter() {
