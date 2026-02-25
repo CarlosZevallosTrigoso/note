@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>n0t3.zt</title>
+<title>n0t3.xyz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:ital,wght@0,300;0,400;1,300&family=Syne+Mono&family=Archivo:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -653,7 +653,7 @@
   <!-- TOP BAR -->
   <div id="topbar" style="position:relative;">
     <div id="topbar-left">
-      <span class="logo">n0t3.zt</span>
+      <span class="logo">n0t3.xyz</span>
       <span class="sep">·</span>
       <button class="btn" id="btn-invert">INVERTIR</button>
       <span class="sep">·</span>
@@ -698,7 +698,7 @@
 
   <!-- TOPBAR STUB (visible when topbar hidden) -->
   <div id="topbar-stub">
-    <span class="stub-logo">n0t3.zt</span>
+    <span class="stub-logo">n0t3.xyz</span>
     <button id="topbar-show" title="Mostrar barra">▼</button>
   </div>
 
@@ -1011,7 +1011,7 @@
 
 <script>
 // ══════════════════════════════════════════════════════
-//  n0t3.zt — ephemeral encrypted notepad
+//  n0t3.xyz — ephemeral encrypted notepad
 //  no localStorage · no cookies · RAM only
 // ══════════════════════════════════════════════════════
 
@@ -1643,7 +1643,7 @@ function endSession() {
 $('stats-close').addEventListener('click', ()=>$('stats-overlay').classList.remove('open'));
 $('stats-export').addEventListener('click', ()=>{
   const lines = [
-    'n0t3.zt — RESUMEN DE SESIÓN',
+    'n0t3.xyz — RESUMEN DE SESIÓN',
     '─'.repeat(36),
     'Inicio:           '+$('s-start').textContent,
     'Fin:              '+$('s-end').textContent,
@@ -1790,7 +1790,7 @@ async function buildSignature(text) {
   const hash = await sha256hex(text + '|' + ts);
   return [
     '─'.repeat(60),
-    'n0t3.zt · FIRMA CRIPTOGRÁFICA',
+    'n0t3.xyz · FIRMA CRIPTOGRÁFICA',
     'Timestamp : ' + ts,
     'SHA-256   : ' + hash,
     'Verificar : sha256( contenido_literal + "|" + timestamp )',
@@ -1905,7 +1905,7 @@ function copyAll() {
 const DRIVE = {
   CLIENT_ID:   '520091872644-b1k8so4ins1to458dep2pc3ml73qif7j.apps.googleusercontent.com',
   SCOPE:       'https://www.googleapis.com/auth/drive.file',
-  FOLDER_NAME: 'n0t3.zt',
+  FOLDER_NAME: 'n0t3.xyz',
   connected:   false,
   token:       null,
   folderId:    null,
@@ -1967,7 +1967,7 @@ $('btn-drive-connect').addEventListener('click', () => {
   tokenClient.requestAccessToken({ prompt: 'consent' });
 });
 
-// ── Ensure n0t3.zt folder exists in Drive ──
+// ── Ensure n0t3.xyz folder exists in Drive ──
 async function ensureDriveFolder() {
   const res = await driveRequest(
     `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE.FOLDER_NAME}'+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name)`,
@@ -2009,7 +2009,7 @@ $('btn-drive-save').addEventListener('click', () => {
     : 'nota-' + nowFilename();
   const info = DRIVE.currentFileId
     ? `Actualizará el archivo existente: ${DRIVE.currentFileName}`
-    : 'Se creará un archivo nuevo en la carpeta n0t3.zt/ de tu Drive';
+    : 'Se creará un archivo nuevo en la carpeta n0t3.xyz/ de tu Drive';
   $('drive-save-info').textContent = info;
   openModal('modal-drive-save');
 });
@@ -2050,7 +2050,7 @@ async function saveToDrive(filename) {
     // Create new file with multipart upload
     if (!DRIVE.folderId) DRIVE.folderId = await ensureDriveFolder();
     const meta     = JSON.stringify({ name: filename, parents: [DRIVE.folderId] });
-    const boundary = 'n0t3zt_boundary';
+    const boundary = 'n0t3xyz_boundary';
     const body     = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: text/plain\r\n\r\n${full}\r\n--${boundary}--`;
     const res = await fetch(
       'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',
@@ -2075,7 +2075,7 @@ $('btn-drive-open').addEventListener('click', async () => {
     );
     const data = await res.json();
     if (!data.files || data.files.length === 0) {
-      $('drive-file-list').innerHTML = '<div style="font-size:12px;color:var(--fg-dim);padding:20px 0;text-align:center;">No hay archivos en n0t3.zt/</div>';
+      $('drive-file-list').innerHTML = '<div style="font-size:12px;color:var(--fg-dim);padding:20px 0;text-align:center;">No hay archivos en n0t3.xyz/</div>';
       return;
     }
     $('drive-file-list').innerHTML = data.files.map(f => {
