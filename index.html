@@ -6,6 +6,8 @@
 <title>n0t3.zt</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;1,400&family=Nunito:ital,wght@0,300;0,400;1,300&family=Syne+Mono&family=Archivo:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -431,6 +433,23 @@
 
   #pomo-controls { display: flex; gap: 6px; margin-left: auto; }
 
+  /* ══ DRIVE FILE LIST ══ */
+  .drive-file-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 4px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    transition: background 0.1s;
+    gap: 12px;
+  }
+  .drive-file-row:hover { background: var(--fg); }
+  .drive-file-row:hover .drive-file-name,
+  .drive-file-row:hover .drive-file-meta { color: var(--bg); }
+  .drive-file-name { font-size: 12px; color: var(--fg); }
+  .drive-file-meta { font-size: 10px; color: var(--fg-dim); white-space: nowrap; }
+
   /* ══ RULER ══ */
   #ruler {
     flex-shrink: 0;
@@ -583,6 +602,10 @@
       <button class="btn" id="btn-export-enc">EXPORTAR ENC</button>
       <button class="btn" id="btn-import">IMPORTAR</button>
       <span class="sep">·</span>
+      <button class="btn" id="btn-drive-connect">DRIVE</button>
+      <button class="btn" id="btn-drive-save"   style="display:none;">GUARDAR EN DRIVE</button>
+      <button class="btn" id="btn-drive-open"   style="display:none;">ABRIR DESDE DRIVE</button>
+      <span class="sep">·</span>
       <button class="btn" id="btn-clear" style="border-color:#cc3333; color:#cc3333;">BORRAR TODO</button>
       <button class="btn-ghost" id="btn-keys">?</button>
     </div>
@@ -680,6 +703,7 @@
   <div class="key-row"><span>Borrar todo</span>             <kbd>Ctrl+Shift+X</kbd></div>
   <div class="key-row"><span>Timer</span>                   <kbd>Ctrl+Shift+T</kbd></div>
   <div class="key-row"><span>Sprint</span>                  <kbd>Ctrl+Shift+P</kbd></div>
+  <div class="key-row"><span>Guardar en Drive</span>         <kbd>Ctrl+Shift+D</kbd></div>
   <div class="key-row"><span>Pomodoro</span>                <kbd>Ctrl+Shift+O</kbd></div>
   <div class="key-row"><span>Sesión</span>                  <kbd>Ctrl+Shift+E</kbd></div>
   <div class="key-row"><span>Cerrar panel</span>            <kbd>Ctrl+Shift+H</kbd></div>
@@ -832,6 +856,39 @@
     <div class="modal-actions">
       <button class="btn" data-close="modal-pomo">CANCELAR</button>
       <button class="btn active" id="pomo-start-btn">INICIAR POMODORO</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRIVE FILE PICKER -->
+<div class="modal-wrap" id="modal-drive-open">
+  <div class="modal-backdrop"></div>
+  <div class="modal-box" style="width:460px;">
+    <button class="modal-close-x" data-close="modal-drive-open">×</button>
+    <div class="modal-title">ABRIR DESDE DRIVE</div>
+    <div id="drive-file-list" style="min-height:80px; max-height:320px; overflow-y:auto; margin-bottom:4px;">
+      <div style="font-size:12px; color:var(--fg-dim); padding:20px 0; text-align:center;">Cargando archivos…</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" data-close="modal-drive-open">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRIVE SAVE NAME -->
+<div class="modal-wrap" id="modal-drive-save">
+  <div class="modal-backdrop"></div>
+  <div class="modal-box">
+    <button class="modal-close-x" data-close="modal-drive-save">×</button>
+    <div class="modal-title">GUARDAR EN DRIVE</div>
+    <div class="modal-row">
+      <div class="modal-label">NOMBRE DEL ARCHIVO</div>
+      <input type="text" class="modal-input" id="drive-save-name" placeholder="nota-sin-titulo">
+    </div>
+    <div id="drive-save-info" style="font-size:11px; color:var(--fg-dim); margin-top:-6px; margin-bottom:10px;"></div>
+    <div class="modal-actions">
+      <button class="btn" data-close="modal-drive-save">CANCELAR</button>
+      <button class="btn active" id="drive-save-confirm">GUARDAR</button>
     </div>
   </div>
 </div>
@@ -1727,6 +1784,7 @@ document.addEventListener('keydown', e=>{
   if (ctrl && e.shiftKey && e.key==='X')           { e.preventDefault(); openModal('modal-clear'); }
   if (ctrl && e.shiftKey && e.key==='T')           { e.preventDefault(); openModal('modal-timer'); }
   if (ctrl && e.shiftKey && (e.key==='P'||e.key==='p')) { e.preventDefault(); openModal('modal-sprint'); }
+  if (ctrl && e.shiftKey && (e.key==='D'||e.key==='d')) { e.preventDefault(); if(DRIVE.connected) $('btn-drive-save').click(); }
   if (ctrl && e.shiftKey && (e.key==='O'||e.key==='o')) { e.preventDefault(); P.active?stopPomo():openModal('modal-pomo'); }
   if (ctrl && e.shiftKey && (e.key==='E'||e.key==='e')) { e.preventDefault(); S.sessionActive?endSession():startSession(); }
   if (ctrl && e.shiftKey && (e.key==='H'||e.key==='h')) { e.preventDefault(); S.keysOpen=!S.keysOpen; $('keys-panel').classList.toggle('open',S.keysOpen); }
@@ -1742,7 +1800,222 @@ function copyAll() {
   navigator.clipboard.writeText(editor.value).then(()=>notify('COPIADO AL PORTAPAPELES'));
 }
 
-// ── PREVENT ACCIDENTAL CLOSE ───────────────────────────
+// ── GOOGLE DRIVE ───────────────────────────────────────
+const DRIVE = {
+  CLIENT_ID:   '520091872644-b1k8so4ins1to458dep2pc3ml73qif7j.apps.googleusercontent.com',
+  SCOPE:       'https://www.googleapis.com/auth/drive.file',
+  FOLDER_NAME: 'n0t3.zt',
+  connected:   false,
+  token:       null,
+  folderId:    null,
+  currentFileId:   null,
+  currentFileName: null,
+};
+
+// Load gapi client
+function initGapiClient() {
+  gapi.client.init({}).then(() => {
+    // gapi ready — token client handles auth separately
+  });
+}
+
+let tokenClient;
+
+function initDrive() {
+  if (typeof google === 'undefined' || typeof gapi === 'undefined') {
+    setTimeout(initDrive, 500);
+    return;
+  }
+  gapi.load('client', initGapiClient);
+
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: DRIVE.CLIENT_ID,
+    scope:     DRIVE.SCOPE,
+    callback:  async (response) => {
+      if (response.error) { notify('ERROR DE AUTENTICACIÓN: ' + response.error); return; }
+      DRIVE.token     = response.access_token;
+      DRIVE.connected = true;
+      gapi.client.setToken({ access_token: DRIVE.token });
+      $('btn-drive-connect').textContent = 'DRIVE ✓';
+      $('btn-drive-connect').classList.add('active');
+      $('btn-drive-save').style.display = '';
+      $('btn-drive-open').style.display = '';
+      notify('CONECTADO A GOOGLE DRIVE');
+      DRIVE.folderId = await ensureDriveFolder();
+    },
+  });
+}
+
+$('btn-drive-connect').addEventListener('click', () => {
+  if (DRIVE.connected) {
+    // Disconnect
+    google.accounts.oauth2.revoke(DRIVE.token, () => {});
+    DRIVE.connected      = false;
+    DRIVE.token          = null;
+    DRIVE.folderId       = null;
+    DRIVE.currentFileId  = null;
+    DRIVE.currentFileName= null;
+    $('btn-drive-connect').textContent = 'DRIVE';
+    $('btn-drive-connect').classList.remove('active');
+    $('btn-drive-save').style.display = 'none';
+    $('btn-drive-open').style.display = 'none';
+    notify('DESCONECTADO DE DRIVE');
+    return;
+  }
+  if (typeof google === 'undefined') { notify('GOOGLE API AÚN CARGANDO…'); return; }
+  tokenClient.requestAccessToken({ prompt: 'consent' });
+});
+
+// ── Ensure n0t3.zt folder exists in Drive ──
+async function ensureDriveFolder() {
+  const res = await driveRequest(
+    `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE.FOLDER_NAME}'+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name)`,
+    'GET'
+  );
+  const data = await res.json();
+  if (data.files && data.files.length > 0) return data.files[0].id;
+
+  // Create folder
+  const create = await driveRequest(
+    'https://www.googleapis.com/drive/v3/files',
+    'POST',
+    { name: DRIVE.FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' }
+  );
+  const folder = await create.json();
+  return folder.id;
+}
+
+// ── Generic Drive fetch helper ──
+async function driveRequest(url, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: {
+      'Authorization': 'Bearer ' + DRIVE.token,
+      'Content-Type':  'application/json',
+    },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(url, opts);
+}
+
+// ── Save to Drive ──
+$('btn-drive-save').addEventListener('click', () => {
+  if (!DRIVE.connected) return notify('CONECTA DRIVE PRIMERO');
+  if (!editor.value.trim()) return notify('NADA QUE GUARDAR');
+  // Prefill with current filename or timestamp
+  $('drive-save-name').value = DRIVE.currentFileName
+    ? DRIVE.currentFileName.replace(/\.txt$/, '')
+    : 'nota-' + nowFilename();
+  const info = DRIVE.currentFileId
+    ? `Actualizará el archivo existente: ${DRIVE.currentFileName}`
+    : 'Se creará un archivo nuevo en la carpeta n0t3.zt/ de tu Drive';
+  $('drive-save-info').textContent = info;
+  openModal('modal-drive-save');
+});
+
+$('drive-save-confirm').addEventListener('click', async () => {
+  let name = ($('drive-save-name').value.trim() || 'nota') ;
+  if (!name.endsWith('.txt')) name += '.txt';
+  closeModal('modal-drive-save');
+  notify('GUARDANDO EN DRIVE…');
+  try {
+    await saveToDrive(name);
+    notify('GUARDADO: ' + name);
+  } catch(e) {
+    notify('ERROR AL GUARDAR EN DRIVE');
+    console.error(e);
+  }
+});
+
+async function saveToDrive(filename) {
+  const content = editor.value;
+  const sig     = await buildSignature(content);
+  const full    = content + '\n\n' + sig;
+  const blob    = new Blob([full], { type: 'text/plain' });
+
+  if (DRIVE.currentFileId) {
+    // Update existing file (PATCH)
+    await fetch(
+      `https://www.googleapis.com/upload/drive/v3/files/${DRIVE.currentFileId}?uploadType=media`,
+      { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + DRIVE.token, 'Content-Type': 'text/plain' }, body: blob }
+    );
+    // Rename if needed
+    await driveRequest(
+      `https://www.googleapis.com/drive/v3/files/${DRIVE.currentFileId}`,
+      'PATCH', { name: filename }
+    );
+    DRIVE.currentFileName = filename;
+  } else {
+    // Create new file with multipart upload
+    if (!DRIVE.folderId) DRIVE.folderId = await ensureDriveFolder();
+    const meta     = JSON.stringify({ name: filename, parents: [DRIVE.folderId] });
+    const boundary = 'n0t3zt_boundary';
+    const body     = `--${boundary}\r\nContent-Type: application/json\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: text/plain\r\n\r\n${full}\r\n--${boundary}--`;
+    const res = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',
+      { method: 'POST', headers: { 'Authorization': 'Bearer ' + DRIVE.token, 'Content-Type': `multipart/related; boundary=${boundary}` }, body }
+    );
+    const file = await res.json();
+    DRIVE.currentFileId   = file.id;
+    DRIVE.currentFileName = file.name;
+  }
+}
+
+// ── Open from Drive ──
+$('btn-drive-open').addEventListener('click', async () => {
+  if (!DRIVE.connected) return notify('CONECTA DRIVE PRIMERO');
+  openModal('modal-drive-open');
+  $('drive-file-list').innerHTML = '<div style="font-size:12px;color:var(--fg-dim);padding:20px 0;text-align:center;">Cargando archivos…</div>';
+  try {
+    if (!DRIVE.folderId) DRIVE.folderId = await ensureDriveFolder();
+    const res  = await driveRequest(
+      `https://www.googleapis.com/drive/v3/files?q='${DRIVE.folderId}'+in+parents+and+mimeType='text/plain'+and+trashed=false&orderBy=modifiedTime+desc&fields=files(id,name,modifiedTime,size)&pageSize=50`,
+      'GET'
+    );
+    const data = await res.json();
+    if (!data.files || data.files.length === 0) {
+      $('drive-file-list').innerHTML = '<div style="font-size:12px;color:var(--fg-dim);padding:20px 0;text-align:center;">No hay archivos en n0t3.zt/</div>';
+      return;
+    }
+    $('drive-file-list').innerHTML = data.files.map(f => {
+      const date = new Date(f.modifiedTime).toLocaleString();
+      const kb   = f.size ? (f.size / 1024).toFixed(1) + ' KB' : '';
+      return `<div class="drive-file-row" data-id="${f.id}" data-name="${f.name}">
+        <span class="drive-file-name">${f.name}</span>
+        <span class="drive-file-meta">${date}${kb ? ' · ' + kb : ''}</span>
+      </div>`;
+    }).join('');
+    document.querySelectorAll('.drive-file-row').forEach(row => {
+      row.addEventListener('click', () => loadFromDrive(row.dataset.id, row.dataset.name));
+    });
+  } catch(e) {
+    $('drive-file-list').innerHTML = '<div style="font-size:12px;color:#cc3333;padding:20px 0;text-align:center;">Error al cargar archivos.</div>';
+    console.error(e);
+  }
+});
+
+async function loadFromDrive(fileId, fileName) {
+  closeModal('modal-drive-open');
+  notify('ABRIENDO ' + fileName + '…');
+  try {
+    const res  = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      { headers: { 'Authorization': 'Bearer ' + DRIVE.token } }
+    );
+    const text = await res.text();
+    editor.value = text;
+    updateCounters();
+    DRIVE.currentFileId   = fileId;
+    DRIVE.currentFileName = fileName;
+    notify('ABIERTO: ' + fileName);
+  } catch(e) {
+    notify('ERROR AL ABRIR ARCHIVO');
+    console.error(e);
+  }
+}
+
+// Init Drive after page load
+window.addEventListener('load', initDrive);
 window.addEventListener('beforeunload', e=>{
   if (editor.value.trim().length>0) { e.preventDefault(); e.returnValue=''; }
 });
