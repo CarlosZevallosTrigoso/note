@@ -563,6 +563,7 @@
 
   /* ══ TOOLS DROPDOWN ══ */
   #tools-dropdown { position: relative; }
+  #drive-dropdown { position: relative; }
 
   #tools-menu {
     display: none;
@@ -576,6 +577,19 @@
     flex-direction: column;
   }
   #tools-menu.open { display: flex; }
+
+  #drive-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--bg);
+    border: 1px solid var(--fg);
+    z-index: 300;
+    min-width: 180px;
+    flex-direction: column;
+  }
+  #drive-menu.open { display: flex; }
 
   .tools-menu-item {
     background: none;
@@ -686,11 +700,20 @@
       <button class="btn" id="btn-export-enc">EXPORTAR ENC</button>
       <button class="btn" id="btn-import">IMPORTAR</button>
       <span class="sep">·</span>
-      <button class="btn" id="btn-drive-connect">DRIVE</button>
-      <button class="btn" id="btn-drive-save" style="display:none;">GUARDAR EN DRIVE</button>
-      <button class="btn" id="btn-drive-open" style="display:none;">ABRIR DESDE DRIVE</button>
+      <div id="drive-dropdown">
+        <button class="btn" id="btn-drive-connect">DRIVE</button>
+        <div id="drive-menu">
+          <button class="tools-menu-item" id="dmenu-save" style="display:none;">Guardar en Drive</button>
+          <button class="tools-menu-item" id="dmenu-open" style="display:none;">Abrir desde Drive</button>
+          <button class="tools-menu-item" id="dmenu-disconnect" style="display:none; color:#cc3333;">Desconectar Drive</button>
+        </div>
+      </div>
+      <!-- hidden proxies for Drive JS -->
+      <button id="btn-drive-save"  style="display:none;"></button>
+      <button id="btn-drive-open"  style="display:none;"></button>
       <span class="sep">·</span>
       <button class="btn" id="btn-clear" style="border-color:#cc3333; color:#cc3333;">BORRAR TODO</button>
+      <button id="btn-nuke" title="Borrar todo y desconectar" style="background:none;border:none;cursor:pointer;font-size:16px;padding:2px 4px;line-height:1;opacity:0.6;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">🔥</button>
       <button class="btn-ghost" id="btn-keys" title="Atajos de teclado (Ctrl+Shift+H)">?</button>
     </div>
     <button id="topbar-toggle" title="Ocultar barra">▲</button>
@@ -1005,6 +1028,24 @@
     <div class="modal-actions">
       <button class="btn" data-close="modal-clear">CANCELAR</button>
       <button class="btn active" id="clear-confirm-btn" style="border-color:#cc3333;background:#cc3333;color:#fff;">BORRAR DEFINITIVAMENTE</button>
+    </div>
+  </div>
+</div>
+
+<!-- NUKE CONFIRM -->
+<div class="modal-wrap" id="modal-nuke">
+  <div class="modal-backdrop"></div>
+  <div class="modal-box" style="text-align:center;">
+    <div style="font-size:40px; margin-bottom:16px; line-height:1;">🔥</div>
+    <div class="modal-title" style="justify-content:center;">NUKEAR TODO</div>
+    <p style="font-size:12px;color:var(--fg-dim);line-height:1.8;margin-bottom:22px;">
+      Esto borrará todo el texto, desconectará Drive,<br>
+      reiniciará todos los timers y recargará la página.<br>
+      No quedará nada.
+    </p>
+    <div class="modal-actions" style="justify-content:center;">
+      <button class="btn" data-close="modal-nuke">CANCELAR</button>
+      <button class="btn" id="nuke-confirm-btn" style="border-color:#cc3333;background:#cc3333;color:#fff;">🔥 NUKEAR</button>
     </div>
   </div>
 </div>
@@ -1939,33 +1980,17 @@ function initDrive() {
       gapi.client.setToken({ access_token: DRIVE.token });
       $('btn-drive-connect').textContent = 'DRIVE ✓';
       $('btn-drive-connect').classList.add('active');
-      $('btn-drive-save').style.display = '';
-      $('btn-drive-open').style.display = '';
+      // show dropdown items
+      $('dmenu-save').style.display       = '';
+      $('dmenu-open').style.display       = '';
+      $('dmenu-disconnect').style.display = '';
       notify('CONECTADO A GOOGLE DRIVE');
       DRIVE.folderId = await ensureDriveFolder();
     },
   });
 }
 
-$('btn-drive-connect').addEventListener('click', () => {
-  if (DRIVE.connected) {
-    // Disconnect
-    google.accounts.oauth2.revoke(DRIVE.token, () => {});
-    DRIVE.connected      = false;
-    DRIVE.token          = null;
-    DRIVE.folderId       = null;
-    DRIVE.currentFileId  = null;
-    DRIVE.currentFileName= null;
-    $('btn-drive-connect').textContent = 'DRIVE';
-    $('btn-drive-connect').classList.remove('active');
-    $('btn-drive-save').style.display = 'none';
-    $('btn-drive-open').style.display = 'none';
-    notify('DESCONECTADO DE DRIVE');
-    return;
-  }
-  if (typeof google === 'undefined') { notify('GOOGLE API AÚN CARGANDO…'); return; }
-  tokenClient.requestAccessToken({ prompt: 'consent' });
-});
+// btn-drive-connect is now handled by the Drive dropdown below
 
 // ── Ensure n0t3.xyz folder exists in Drive ──
 async function ensureDriveFolder() {
@@ -2162,6 +2187,58 @@ $('topbar-show').addEventListener('click', () => {
   $('topbar').style.display = '';
   $('topbar-stub').classList.remove('visible');
   setTimeout(applyMargins, 0);
+});
+
+// ── DRIVE DROPDOWN ────────────────────────────────────
+const driveMenu = $('drive-menu');
+$('btn-drive-connect').addEventListener('click', e => {
+  // If connected, toggle dropdown instead of disconnecting directly
+  if (DRIVE.connected) {
+    e.stopPropagation();
+    driveMenu.classList.toggle('open');
+    return;
+  }
+  // Not connected — trigger auth
+  if (typeof google === 'undefined') { notify('GOOGLE API AÚN CARGANDO…'); return; }
+  tokenClient.requestAccessToken({ prompt: '' });
+}, true); // capture phase so this runs before the old listener
+driveMenu.addEventListener('click', e => e.stopPropagation());
+document.addEventListener('click', () => driveMenu.classList.remove('open'));
+
+$('dmenu-save').addEventListener('click', () => {
+  driveMenu.classList.remove('open');
+  $('btn-drive-save').click();
+});
+$('dmenu-open').addEventListener('click', () => {
+  driveMenu.classList.remove('open');
+  $('btn-drive-open').click();
+});
+$('dmenu-disconnect').addEventListener('click', () => {
+  driveMenu.classList.remove('open');
+  // Trigger the existing disconnect logic
+  DRIVE.connected = true; // ensure disconnect branch runs
+  $('btn-drive-connect').click();
+});
+
+// ── NUKE 🔥 ───────────────────────────────────────────
+$('btn-nuke').addEventListener('click', () => openModal('modal-nuke'));
+
+$('nuke-confirm-btn').addEventListener('click', () => {
+  // 1. Revoke Drive if connected
+  if (DRIVE.connected && typeof google !== 'undefined') {
+    try { google.accounts.oauth2.revoke(DRIVE.token, ()=>{}); } catch(e) {}
+  }
+  // 2. Clear editor
+  editor.value = '';
+  // 3. Stop all timers
+  if (S.timerActive)   stopTimer();
+  if (S.sessionActive) endSession();
+  if (S.sprintActive)  endSprint();
+  if (P.active)        stopPomo();
+  // 4. Remove beforeunload guard so reload doesn't prompt
+  window.onbeforeunload = null;
+  // 5. Reload
+  location.reload();
 });
 
 // ── KEYS PANEL ────────────────────────────────────────
