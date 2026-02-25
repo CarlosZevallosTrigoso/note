@@ -98,34 +98,40 @@
   }
   .btn-ghost:hover { color: var(--fg); }
 
-  /* ══ WIDTH CONTROL ══ */
-  #width-control { display: flex; align-items: center; gap: 7px; }
-  #width-slider {
-    -webkit-appearance: none; appearance: none;
-    width: 80px; height: 2px;
-    background: var(--line); outline: none; cursor: pointer;
+  /* ══ MARGIN CONTROL ══ */
+  #margin-control { display: flex; align-items: center; gap: 6px; }
+  .margin-label { font-size: 12px; color: var(--fg-dim); }
+  .margin-input {
+    width: 52px;
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--fg);
+    font-family: var(--ui-font);
+    font-size: 12px;
+    padding: 3px 6px;
+    outline: none;
+    text-align: center;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
   }
-  #width-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 10px; height: 10px;
-    background: var(--fg); border-radius: 50%; cursor: pointer;
-  }
-  #width-label { font-size: 12px; color: var(--fg-dim); min-width: 34px; }
+  .margin-input::-webkit-inner-spin-button,
+  .margin-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .margin-input:focus { border-color: var(--fg); }
 
   /* ══ EDITOR ══ */
   #editor-wrap {
     flex: 1;
     overflow: hidden;
     display: flex;
-    justify-content: center;
-    padding: 0;
   }
 
   #page {
-    width: var(--page-width);
+    flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
+    margin-left: 120px;
+    margin-right: 120px;
   }
 
   #editor {
@@ -425,12 +431,123 @@
 
   #pomo-controls { display: flex; gap: 6px; margin-left: auto; }
 
+  /* ══ RULER ══ */
+  #ruler {
+    flex-shrink: 0;
+    height: 24px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    position: relative;
+    overflow: visible;
+    user-select: none;
+    transition: background 0.2s;
+  }
+
+  #ruler-track {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 0; right: 0;
+  }
+
+  /* tick marks */
+  #ruler-ticks {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .ruler-handle {
+    position: absolute;
+    top: 0;
+    width: 12px;
+    height: 100%;
+    cursor: ew-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+  .ruler-handle::before {
+    content: '';
+    width: 2px;
+    height: 14px;
+    background: var(--fg);
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+  .ruler-handle:hover::before,
+  .ruler-handle.dragging::before {
+    opacity: 1;
+  }
+  /* arrow caps */
+  .ruler-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+  }
+  #handle-left {
+    transform: translateX(-50%);
+  }
+  #handle-left::after {
+    border-right-color: var(--fg);
+    left: -2px;
+    opacity: 0.5;
+  }
+  #handle-right {
+    transform: translateX(-50%);
+  }
+  #handle-right::after {
+    border-left-color: var(--fg);
+    right: -2px;
+    opacity: 0.5;
+  }
+  #handle-left:hover::after,
+  #handle-left.dragging::after,
+  #handle-right:hover::after,
+  #handle-right.dragging::after {
+    opacity: 1;
+  }
+
+  /* shaded margin areas */
+  #ruler-shade-left,
+  #ruler-shade-right {
+    position: absolute;
+    top: 0; bottom: 0;
+    background: var(--fg);
+    opacity: 0.04;
+    pointer-events: none;
+    transition: background 0.2s;
+  }
+  #ruler-shade-left  { left: 0; }
+  #ruler-shade-right { right: 0; }
+
+  /* margin tooltip */
+  #ruler-tooltip {
+    position: absolute;
+    top: 26px;
+    background: var(--fg);
+    color: var(--bg);
+    font-family: var(--ui-font);
+    font-size: 10px;
+    padding: 3px 7px;
+    letter-spacing: 0.06em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+    z-index: 10;
+    transform: translateX(-50%);
+  }
+  #ruler-tooltip.show { opacity: 1; }
+
   /* ══ TYPEWRITER MODE ══ */
   body.typewriter #editor-wrap { align-items: flex-start; }
 
   /* ══ SCROLLBAR ══ */
-  #editor-wrap::-webkit-scrollbar { width: 3px; }
-  #editor-wrap::-webkit-scrollbar-thumb { background: var(--fg-dimmer); }
+  #editor::-webkit-scrollbar { width: 3px; }
+  #editor::-webkit-scrollbar-thumb { background: var(--fg-dimmer); }
 </style>
 </head>
 <body>
@@ -440,11 +557,6 @@
   <div id="topbar">
     <div id="topbar-left">
       <span class="logo">n0t3.zt</span>
-      <span class="sep">·</span>
-      <div id="width-control">
-        <input type="range" id="width-slider" min="30" max="95" value="65">
-        <span id="width-label">65%</span>
-      </div>
       <span class="sep">·</span>
       <button class="btn" id="btn-invert">INVERTIR</button>
       <span class="sep">·</span>
@@ -490,6 +602,16 @@
       <button class="btn" id="pomo-skip-btn">SALTAR</button>
       <button class="btn" id="pomo-stop-btn">DETENER</button>
     </div>
+  </div>
+
+  <!-- RULER -->
+  <div id="ruler">
+    <div id="ruler-shade-left"></div>
+    <div id="ruler-shade-right"></div>
+    <canvas id="ruler-ticks"></canvas>
+    <div class="ruler-handle" id="handle-left"></div>
+    <div class="ruler-handle" id="handle-right"></div>
+    <div id="ruler-tooltip"></div>
   </div>
 
   <!-- TIMER OVERLAY (watermark behind text) -->
@@ -843,17 +965,140 @@ S.wpmTick = setInterval(()=>{
   }
 }, 4000);
 
-// ── width slider ───────────────────────────────────────
-$('width-slider').addEventListener('input', function(){
-  document.documentElement.style.setProperty('--page-width', this.value+'%');
-  $('width-label').textContent = this.value+'%';
-});
+// ── RULER ──────────────────────────────────────────────
+const ruler      = $('ruler');
+const handleL    = $('handle-left');
+const handleR    = $('handle-right');
+const shadeL     = $('ruler-shade-left');
+const shadeR     = $('ruler-shade-right');
+const tooltip    = $('ruler-tooltip');
+const canvas     = $('ruler-ticks');
+const ctx        = canvas.getContext('2d');
+
+let marginLeft  = 120;
+let marginRight = 120;
+
+function applyMargins() {
+  $('page').style.marginLeft  = marginLeft  + 'px';
+  $('page').style.marginRight = marginRight + 'px';
+  const W = ruler.offsetWidth;
+  handleL.style.left  = marginLeft  + 'px';
+  handleR.style.left  = (W - marginRight) + 'px';
+  shadeL.style.width  = marginLeft  + 'px';
+  shadeR.style.width  = marginRight + 'px';
+  drawTicks();
+}
+
+function drawTicks() {
+  const W = ruler.offsetWidth;
+  const H = ruler.offsetHeight;
+  canvas.width  = W;
+  canvas.height = H;
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = getComputedStyle(document.documentElement)
+    .getPropertyValue('--fg-dimmer').trim() || '#cccccc';
+  ctx.lineWidth = 1;
+  // tick every 10px, longer every 50px
+  for (let x = 0; x <= W; x += 10) {
+    const isMajor = x % 50 === 0;
+    const tickH   = isMajor ? 10 : 5;
+    ctx.beginPath();
+    ctx.moveTo(x + 0.5, H);
+    ctx.lineTo(x + 0.5, H - tickH);
+    ctx.stroke();
+  }
+}
+
+function showTooltip(x, val) {
+  tooltip.textContent = val + ' px';
+  tooltip.style.left  = x + 'px';
+  tooltip.classList.add('show');
+}
+function hideTooltip() { tooltip.classList.remove('show'); }
+
+function makeDraggable(handle, side) {
+  let startX, startMargin;
+
+  handle.addEventListener('mousedown', e => {
+    e.preventDefault();
+    startX      = e.clientX;
+    startMargin = side === 'left' ? marginLeft : marginRight;
+    handle.classList.add('dragging');
+
+    function onMove(e) {
+      const W    = ruler.offsetWidth;
+      const dx   = side === 'left' ? e.clientX - startX : startX - e.clientX;
+      const newM = Math.max(0, Math.min(W * 0.7, startMargin + dx));
+      if (side === 'left') {
+        marginLeft  = Math.round(newM);
+        // don't let handles overlap
+        if (marginLeft + marginRight > W * 0.85) marginLeft = Math.round(W * 0.85 - marginRight);
+      } else {
+        marginRight = Math.round(newM);
+        if (marginLeft + marginRight > W * 0.85) marginRight = Math.round(W * 0.85 - marginLeft);
+      }
+      applyMargins();
+      showTooltip(
+        side === 'left' ? marginLeft : W - marginRight,
+        side === 'left' ? marginLeft : marginRight
+      );
+    }
+
+    function onUp() {
+      handle.classList.remove('dragging');
+      hideTooltip();
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup',   onUp);
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+  });
+
+  // touch support
+  handle.addEventListener('touchstart', e => {
+    e.preventDefault();
+    startX      = e.touches[0].clientX;
+    startMargin = side === 'left' ? marginLeft : marginRight;
+    handle.classList.add('dragging');
+
+    function onMove(e) {
+      const W  = ruler.offsetWidth;
+      const dx = side === 'left'
+        ? e.touches[0].clientX - startX
+        : startX - e.touches[0].clientX;
+      const newM = Math.max(0, Math.min(W * 0.7, startMargin + dx));
+      if (side === 'left') marginLeft  = Math.round(newM);
+      else                 marginRight = Math.round(newM);
+      applyMargins();
+      showTooltip(
+        side === 'left' ? marginLeft : W - marginRight,
+        side === 'left' ? marginLeft : marginRight
+      );
+    }
+    function onEnd() {
+      handle.classList.remove('dragging');
+      hideTooltip();
+      handle.removeEventListener('touchmove', onMove);
+      handle.removeEventListener('touchend',  onEnd);
+    }
+    handle.addEventListener('touchmove', onMove, { passive: false });
+    handle.addEventListener('touchend',  onEnd);
+  }, { passive: false });
+}
+
+makeDraggable(handleL, 'left');
+makeDraggable(handleR, 'right');
+
+// init ruler after layout
+window.addEventListener('resize', applyMargins);
 
 // ── invert ─────────────────────────────────────────────
 function toggleInvert() {
   S.inverted = !S.inverted;
   document.body.classList.toggle('inverted', S.inverted);
   $('btn-invert').classList.toggle('active', S.inverted);
+  setTimeout(drawTicks, 50);
 }
 $('btn-invert').addEventListener('click', toggleInvert);
 
@@ -1504,6 +1749,7 @@ window.addEventListener('beforeunload', e=>{
 
 // ── INIT ───────────────────────────────────────────────
 updateCounters();
+setTimeout(applyMargins, 0); // after layout
 editor.focus();
 </script>
 </body>
