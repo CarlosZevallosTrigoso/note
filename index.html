@@ -54,18 +54,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
-    height: 42px;
-    min-height: 42px;
-    max-height: 42px;
+    padding: 9px 20px;
     border-bottom: 1px solid var(--line);
     flex-shrink: 0;
     gap: 10px;
-    overflow: hidden;
+    flex-wrap: wrap;
   }
 
-  #topbar-left  { display: flex; align-items: center; gap: 10px; flex-shrink: 0; overflow: hidden; }
-  #topbar-right { display: flex; align-items: center; gap: 6px;  flex-shrink: 0; }
+  #topbar-left  { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  #topbar-right { display: flex; align-items: center; gap: 7px;  flex-wrap: wrap; }
 
   .logo {
     font-size: 16px;
@@ -436,61 +433,6 @@
 
   #pomo-controls { display: flex; gap: 6px; margin-left: auto; }
 
-  /* ══ SPRINT COUNTDOWN ══ */
-  #sprint-countdown {
-    display: none;
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    color: var(--fg-dim);
-    white-space: nowrap;
-  }
-  #sprint-countdown.active { display: inline; }
-  #sprint-countdown.warning { color: #cc3333; font-weight: 500; }
-
-  /* ══ COLUMNS ══ */
-  #columns-wrap {
-    display: flex;
-    flex: 1;
-    gap: 0;
-    height: 100%;
-  }
-  #columns-wrap .col-editor {
-    flex: 1;
-    padding: 52px 24px;
-    background: transparent;
-    border: none; outline: none;
-    color: var(--fg);
-    font-family: var(--editor-font);
-    font-size: var(--font-size);
-    font-weight: 300;
-    line-height: var(--line-height);
-    resize: none;
-    caret-color: var(--fg);
-    word-break: break-word;
-    overflow-wrap: break-word;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    border-right: 1px solid var(--line);
-  }
-  #columns-wrap .col-editor:last-child { border-right: none; }
-  #columns-wrap .col-editor::placeholder { color: var(--fg-dimmer); font-style: italic; }
-
-  /* main editor in single column mode keeps no padding issues */
-  #editor {
-    padding: 52px 0;
-  }
-
-  /* ══ FIND BAR ══ */
-  mark.find-match {
-    background: rgba(255,200,0,0.4);
-    color: inherit;
-    border-radius: 2px;
-  }
-  mark.find-match.current {
-    background: rgba(255,140,0,0.7);
-  }
-
   /* ══ DRIVE FILE LIST ══ */
   .drive-file-row {
     display: flex;
@@ -751,9 +693,6 @@
           <button class="tools-menu-item" id="tmenu-timer">Timer</button>
           <button class="tools-menu-item" id="tmenu-session">Sesión</button>
           <button class="tools-menu-item" id="tmenu-pomo">Pomodoro</button>
-          <div style="height:1px;background:var(--line);margin:2px 0;"></div>
-          <button class="tools-menu-item" id="tmenu-columns">Columnas</button>
-          <button class="tools-menu-item" id="tmenu-watermark">Watermark</button>
         </div>
       </div>
       <span class="sep">·</span>
@@ -792,8 +731,6 @@
     <button id="btn-timer"></button>
     <button id="btn-session"></button>
     <button id="btn-pomo"></button>
-    <button id="btn-columns"></button>
-    <button id="btn-watermark"></button>
   </div>
 
   <!-- SPRINT PROGRESS BAR -->
@@ -828,31 +765,11 @@
     <div id="timer-label">TIMER ACTIVO</div>
   </div>
 
-  <!-- FIND / REPLACE BAR -->
-  <div id="findbar" style="display:none; flex-shrink:0; border-bottom:1px solid var(--line); padding:6px 20px; align-items:center; gap:8px; flex-wrap:wrap;">
-    <input type="text"     id="find-input"   class="modal-input" placeholder="buscar…"     style="width:180px; padding:4px 8px; font-size:12px;">
-    <input type="text"     id="replace-input" class="modal-input" placeholder="reemplazar…" style="width:180px; padding:4px 8px; font-size:12px;">
-    <label style="font-size:11px; color:var(--fg-dim); display:flex; align-items:center; gap:4px; cursor:pointer;">
-      <input type="checkbox" id="find-regex"> regex
-    </label>
-    <label style="font-size:11px; color:var(--fg-dim); display:flex; align-items:center; gap:4px; cursor:pointer;">
-      <input type="checkbox" id="find-case"> Aa
-    </label>
-    <span id="find-count" style="font-size:11px; color:var(--fg-dim); min-width:50px;"></span>
-    <button class="btn" id="find-prev">◀</button>
-    <button class="btn" id="find-next">▶</button>
-    <button class="btn" id="find-replace-one">REEMPLAZAR</button>
-    <button class="btn" id="find-replace-all">REEMPLAZAR TODO</button>
-    <button class="btn-ghost" id="find-close" style="margin-left:auto;">×</button>
-  </div>
-
   <!-- EDITOR -->
   <div id="editor-wrap">
     <div id="page">
-      <div id="columns-wrap">
-        <textarea id="editor" placeholder="empieza a escribir…" spellcheck="false"
-          autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
-      </div>
+      <textarea id="editor" placeholder="empieza a escribir…" spellcheck="false"
+        autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
     </div>
   </div>
 
@@ -870,7 +787,6 @@
       <div class="stat">Vel. escritura <strong id="cnt-wpm">— wpm</strong></div>
     </div>
     <div id="status-right">
-      <span id="sprint-countdown"></span>
       <span id="session-clock">00:00:00</span>
     </div>
   </div>
@@ -905,7 +821,6 @@
     <div class="keys-title" style="margin-bottom:0;">ATAJOS</div>
     <button id="btn-keys-close" style="background:none;border:none;color:var(--fg-dim);font-family:var(--ui-font);font-size:18px;cursor:pointer;line-height:1;padding:0 2px;">×</button>
   </div>
-  <div class="key-row"><span>Buscar y reemplazar</span>      <kbd>Ctrl+F</kbd></div>
   <div class="key-row"><span>Invertir colores</span>        <kbd>Ctrl+I</kbd></div>
   <div class="key-row"><span>Copiar todo</span>             <kbd>Ctrl+Shift+C</kbd></div>
   <div class="key-row"><span>Exportar .txt</span>           <kbd>Ctrl+S</kbd></div>
@@ -959,25 +874,8 @@
     <button class="modal-close-x" data-close="modal-sprint">×</button>
     <div class="modal-title">SPRINT DE ESCRITURA</div>
     <div class="modal-row">
-      <div class="modal-label">MODO</div>
-      <select class="modal-input" id="sprint-mode">
-        <option value="words-up">Palabras — meta hacia arriba</option>
-        <option value="words-down">Palabras — límite regresivo</option>
-        <option value="chars-down">Caracteres — límite regresivo</option>
-      </select>
-    </div>
-    <div class="modal-row">
-      <div class="modal-label" id="sprint-goal-label">META DE PALABRAS</div>
+      <div class="modal-label">META DE PALABRAS</div>
       <input type="number" class="modal-input" id="sprint-goal" value="500" min="1" max="99999">
-    </div>
-    <div class="modal-row" id="sprint-presets-wrap" style="display:none;">
-      <div class="modal-label">PRESETS RÁPIDOS</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="btn sprint-preset" data-val="280">Tweet 280</button>
-        <button class="btn sprint-preset" data-val="17">Haiku 17</button>
-        <button class="btn sprint-preset" data-val="500">Abstract 500</button>
-        <button class="btn sprint-preset" data-val="140">SMS 140</button>
-      </div>
     </div>
     <div class="modal-row">
       <div class="modal-label">AL ALCANZAR LA META</div>
@@ -989,49 +887,6 @@
     <div class="modal-actions">
       <button class="btn" data-close="modal-sprint">CANCELAR</button>
       <button class="btn active" id="sprint-start-btn">INICIAR SPRINT</button>
-    </div>
-  </div>
-</div>
-
-<!-- WATERMARK SETTINGS -->
-<div class="modal-wrap" id="modal-watermark">
-  <div class="modal-backdrop"></div>
-  <div class="modal-box">
-    <button class="modal-close-x" data-close="modal-watermark">×</button>
-    <div class="modal-title">WATERMARK INVISIBLE</div>
-    <p style="font-size:11px;color:var(--fg-dim);line-height:1.7;margin-bottom:18px;">Se incrusta como caracteres Unicode de ancho cero al exportar. Invisible al leer, detectable con herramientas de análisis.</p>
-    <div class="modal-row">
-      <div class="modal-label">ACTIVAR WATERMARK EN EXPORTS</div>
-      <select class="modal-input" id="wm-enabled">
-        <option value="yes">Sí</option>
-        <option value="no">No</option>
-      </select>
-    </div>
-    <div class="modal-row">
-      <div class="modal-label">AUTOR (opcional)</div>
-      <input type="text" class="modal-input" id="wm-author" placeholder="nombre o alias">
-    </div>
-    <div class="modal-row">
-      <div class="modal-label">TEXTO PERSONALIZADO (opcional)</div>
-      <input type="text" class="modal-input" id="wm-custom" placeholder="proyecto, categoría, etc.">
-    </div>
-    <div class="modal-row">
-      <div class="modal-label">INCLUIR TIMESTAMP</div>
-      <select class="modal-input" id="wm-timestamp">
-        <option value="yes">Sí</option>
-        <option value="no">No</option>
-      </select>
-    </div>
-    <div class="modal-row">
-      <div class="modal-label">INCLUIR HUELLA DEL DISPOSITIVO</div>
-      <select class="modal-input" id="wm-device">
-        <option value="yes">Sí</option>
-        <option value="no">No</option>
-      </select>
-    </div>
-    <div class="modal-actions">
-      <button class="btn" data-close="modal-watermark">CERRAR</button>
-      <button class="btn active" id="wm-decode-btn">DECODIFICAR TEXTO</button>
     </div>
   </div>
 </div>
@@ -1226,8 +1081,6 @@ const S = {
   sprintGoal:   0,
   sprintBase:   0,
   sprintExpire: 'continue',
-  sprintMode:   'words-up',   // 'words-up' | 'words-down' | 'chars-down'
-  sprintFrozen: false,
   // wpm sliding window
   wpmWindow:  [],
   wpmTick:    null,
@@ -1286,30 +1139,10 @@ function updateCounters() {
 
   // sprint progress
   if (S.sprintActive) {
-    const w   = words(t);
-    const len = t.length;
-    if (S.sprintMode === 'words-up') {
-      const gained   = Math.max(0, w - S.sprintBase);
-      const progress = Math.min(gained / S.sprintGoal, 1);
-      $('sprint-bar').style.width = (progress*100)+'%';
-      if (progress >= 1) completeSprint();
-    } else if (S.sprintMode === 'words-down') {
-      const used     = Math.max(0, w - S.sprintBase);
-      const remaining = Math.max(0, S.sprintGoal - used);
-      const progress  = Math.min(used / S.sprintGoal, 1);
-      $('sprint-bar').style.width = (progress*100)+'%';
-      $('sprint-countdown').textContent = remaining + ' pal. restantes';
-      $('sprint-countdown').classList.toggle('warning', remaining <= Math.ceil(S.sprintGoal * 0.1));
-      if (remaining <= 0) completeSprint();
-    } else if (S.sprintMode === 'chars-down') {
-      const usedChars = Math.max(0, len - S.sprintBase);
-      const remaining = Math.max(0, S.sprintGoal - usedChars);
-      const progress  = Math.min(usedChars / S.sprintGoal, 1);
-      $('sprint-bar').style.width = (progress*100)+'%';
-      $('sprint-countdown').textContent = remaining + ' car. restantes';
-      $('sprint-countdown').classList.toggle('warning', remaining <= Math.ceil(S.sprintGoal * 0.1));
-      if (remaining <= 0) completeSprint();
-    }
+    const gained   = Math.max(0, w - S.sprintBase);
+    const progress = Math.min(gained / S.sprintGoal, 1);
+    $('sprint-bar').style.width = (progress*100)+'%';
+    if (progress >= 1) completeSprint();
   }
 
   // finalizar keyword
@@ -1884,52 +1717,30 @@ function resumeFromSprint() {
   $('sprint-bar').style.background='var(--fg)';
   notify('ESCRITURA REANUDADA');
 }
-// ── SPRINT MODAL UI ───────────────────────────────────
-$('sprint-mode').addEventListener('change', function() {
-  const isDown = this.value !== 'words-up';
-  const isChars = this.value === 'chars-down';
-  $('sprint-goal-label').textContent = isChars ? 'LÍMITE DE CARACTERES' : 'LÍMITE DE PALABRAS';
-  $('sprint-presets-wrap').style.display = isDown ? 'block' : 'none';
-  if (!isDown) $('sprint-goal').value = 500;
-});
-document.querySelectorAll('.sprint-preset').forEach(btn => {
-  btn.addEventListener('click', () => {
-    $('sprint-goal').value = btn.dataset.val;
-  });
-});
-
 $('sprint-start-btn').addEventListener('click', ()=>{
   const goal = parseInt($('sprint-goal').value);
   if (!goal||goal<1) return notify('META INVÁLIDA');
-  S.sprintMode   = $('sprint-mode').value;
   S.sprintGoal   = goal;
-  S.sprintBase   = S.sprintMode === 'chars-down'
-    ? editor.value.length
-    : words(editor.value);
+  S.sprintBase   = words(editor.value);
   S.sprintExpire = $('sprint-expire').value;
   S.sprintActive = true;
   $('sprint-bar-wrap').style.display='block';
   $('sprint-bar').style.width='0%';
   $('btn-sprint').classList.add('active');
   $('btn-sprint').textContent = 'DETENER SPRINT';
-  if (S.sprintMode !== 'words-up') {
-    $('sprint-countdown').classList.add('active');
-    $('sprint-countdown').textContent = goal + (S.sprintMode === 'chars-down' ? ' car. restantes' : ' pal. restantes');
-  }
   closeModal('modal-sprint');
-  const unit = S.sprintMode === 'chars-down' ? 'CARACTERES' : 'PALABRAS';
-  notify(`SPRINT: LÍMITE ${goal} ${unit}`);
+  notify(`SPRINT: META ${goal} PALABRAS`);
 });
 
 function completeSprint() {
   S.sprintActive=false;
   $('sprint-bar').style.background='#22aa55';
-  $('sprint-countdown').classList.remove('active','warning');
 
   if (S.sprintExpire==='freeze') {
     editor.disabled=true;
     $('btn-sprint').classList.add('active');
     $('btn-sprint').textContent='REANUDAR ESCRITURA';
+    // next click on btn-sprint will unfreeze
     S.sprintFrozen=true;
     notify('¡SPRINT COMPLETADO! Pulsa REANUDAR ESCRITURA para continuar.', 5000);
   } else {
@@ -1946,7 +1757,6 @@ function completeSprint() {
 function endSprint() {
   S.sprintActive=false;
   $('sprint-bar-wrap').style.display='none';
-  $('sprint-countdown').classList.remove('active','warning');
   $('btn-sprint').classList.remove('active');
   $('btn-sprint').textContent='SPRINT';
   editor.disabled=false;
@@ -2111,8 +1921,7 @@ document.addEventListener('keydown', e=>{
   const ctrl = e.ctrlKey||e.metaKey;
   if (ctrl && e.key==='i')                         { e.preventDefault(); toggleInvert(); }
   if (ctrl && e.key==='t')                         { e.preventDefault(); toggleTypewriter(); }
-  if (ctrl && e.key==='f') { e.preventDefault(); openFindBar(); }
-  if (ctrl && e.key==='s')  { e.preventDefault(); exportTxt(); }
+  if (ctrl && e.key==='s')                         { e.preventDefault(); exportTxt(); }
   if (ctrl && e.shiftKey && e.key==='C')           { e.preventDefault(); copyAll(); }
   if (ctrl && e.shiftKey && e.key==='X')           { e.preventDefault(); openModal('modal-clear'); }
   if (ctrl && e.shiftKey && e.key==='T')           { e.preventDefault(); openModal('modal-timer'); }
@@ -2122,7 +1931,6 @@ document.addEventListener('keydown', e=>{
   if (ctrl && e.shiftKey && (e.key==='E'||e.key==='e')) { e.preventDefault(); S.sessionActive?endSession():startSession(); }
   if (ctrl && e.shiftKey && (e.key==='H'||e.key==='h')) { e.preventDefault(); S.keysOpen=!S.keysOpen; $('keys-panel').classList.toggle('open',S.keysOpen); }
   if (e.key==='Escape') {
-    if (findbar.style.display !== 'none') { closeFindBar(); return; }
     document.querySelectorAll('.modal-wrap.open').forEach(m=>closeModal(m.id));
     $('stats-overlay').classList.remove('open');
     if (S.keysOpen) { closeKeysPanel(); }
@@ -2345,22 +2153,18 @@ document.addEventListener('click', () => toolsMenu.classList.remove('open'));
 toolsMenu.addEventListener('click', e => e.stopPropagation());
 
 // Wire menu items → proxy buttons
-$('tmenu-sprint').addEventListener('click',    () => { toolsMenu.classList.remove('open'); $('btn-sprint').click();    });
-$('tmenu-timer').addEventListener('click',     () => { toolsMenu.classList.remove('open'); $('btn-timer').click();     });
-$('tmenu-session').addEventListener('click',   () => { toolsMenu.classList.remove('open'); $('btn-session').click();   });
-$('tmenu-pomo').addEventListener('click',      () => { toolsMenu.classList.remove('open'); $('btn-pomo').click();      });
-$('tmenu-columns').addEventListener('click',   () => { toolsMenu.classList.remove('open'); $('btn-columns').click();   });
-$('tmenu-watermark').addEventListener('click', () => { toolsMenu.classList.remove('open'); $('btn-watermark').click(); });
+$('tmenu-sprint').addEventListener('click',  () => { toolsMenu.classList.remove('open'); $('btn-sprint').click();  });
+$('tmenu-timer').addEventListener('click',   () => { toolsMenu.classList.remove('open'); $('btn-timer').click();   });
+$('tmenu-session').addEventListener('click', () => { toolsMenu.classList.remove('open'); $('btn-session').click(); });
+$('tmenu-pomo').addEventListener('click',    () => { toolsMenu.classList.remove('open'); $('btn-pomo').click();    });
 
 // Sync menu item labels with proxy button state
 function syncToolLabels() {
   const pairs = [
-    ['btn-sprint',    'tmenu-sprint',    'Sprint'],
-    ['btn-timer',     'tmenu-timer',     'Timer'],
-    ['btn-session',   'tmenu-session',   'Sesión'],
-    ['btn-pomo',      'tmenu-pomo',      'Pomodoro'],
-    ['btn-columns',   'tmenu-columns',   'Columnas'],
-    ['btn-watermark', 'tmenu-watermark', 'Watermark'],
+    ['btn-sprint','tmenu-sprint','Sprint'],
+    ['btn-timer','tmenu-timer','Timer'],
+    ['btn-session','tmenu-session','Sesión'],
+    ['btn-pomo','tmenu-pomo','Pomodoro'],
   ];
   pairs.forEach(([src, dst, def]) => {
     const srcEl = $(src), dstEl = $(dst);
@@ -2369,7 +2173,7 @@ function syncToolLabels() {
   });
 }
 const proxyObserver = new MutationObserver(syncToolLabels);
-['btn-sprint','btn-timer','btn-session','btn-pomo','btn-columns','btn-watermark'].forEach(id =>
+['btn-sprint','btn-timer','btn-session','btn-pomo'].forEach(id =>
   proxyObserver.observe($(id), { attributes: true, childList: true, characterData: true, subtree: true })
 );
 
@@ -2448,203 +2252,7 @@ $('btn-keys').addEventListener('click', () => {
 });
 $('btn-keys-close').addEventListener('click', closeKeysPanel);
 
-// ── WATERMARK ──────────────────────────────────────────
-// Zero-width chars encoding: ZWSP=0, ZWNJ=1, ZWJ=separator
-const ZW0 = '\u200B', ZW1 = '\u200C', ZWS = '\u200D';
-
-function encodeWatermark(text) {
-  return text.split('').map(c =>
-    c.charCodeAt(0).toString(2).padStart(8,'0')
-      .split('').map(b => b==='0' ? ZW0 : ZW1).join('')
-  ).join(ZWS);
-}
-
-function buildWatermarkPayload() {
-  if ($('wm-enabled').value !== 'yes') return '';
-  const parts = [];
-  const author = $('wm-author').value.trim();
-  const custom = $('wm-custom').value.trim();
-  if (author) parts.push('author:' + author);
-  if (custom) parts.push('note:' + custom);
-  if ($('wm-timestamp').value === 'yes') parts.push('ts:' + new Date().toISOString());
-  if ($('wm-device').value === 'yes') {
-    const fp = [navigator.language, screen.width+'x'+screen.height, navigator.hardwareConcurrency+'cores'].join('|');
-    parts.push('device:' + fp);
-  }
-  return parts.length ? encodeWatermark(parts.join(';')) : '';
-}
-
-function decodeWatermark(text) {
-  const zwChars = new Set([ZW0, ZW1, ZWS]);
-  let zwStr = '';
-  for (const c of text) { if (zwChars.has(c)) zwStr += c; }
-  if (!zwStr) return null;
-  const bytes = zwStr.split(ZWS);
-  try {
-    return bytes.map(b =>
-      String.fromCharCode(parseInt(b.split('').map(c => c===ZW0?'0':'1').join(''), 2))
-    ).join('');
-  } catch { return null; }
-}
-
-$('btn-watermark').addEventListener('click', () => openModal('modal-watermark'));
-
-$('wm-decode-btn').addEventListener('click', () => {
-  const decoded = decodeWatermark(editor.value);
-  if (decoded) notify('WATERMARK: ' + decoded, 6000);
-  else notify('NO SE ENCONTRÓ WATERMARK EN EL TEXTO');
-});
-
-// Inject watermark into exports
-const _origExportTxt = exportTxt;
-exportTxt = async function() {
-  const t = editor.value;
-  if (!t.trim()) return notify('NADA QUE EXPORTAR');
-  const wm  = buildWatermarkPayload();
-  const out = wm ? t.slice(0,Math.floor(t.length/2)) + wm + t.slice(Math.floor(t.length/2)) : t;
-  const sig = await buildSignature(t);
-  downloadText(out + '\n\n' + sig, 'nota-'+nowFilename()+'.txt');
-};
-
-// ── COLUMNS ────────────────────────────────────────────
-let columnCount = 1;
-
-$('btn-columns').addEventListener('click', () => {
-  columnCount = columnCount >= 3 ? 1 : columnCount + 1;
-  applyColumns();
-  $('btn-columns').textContent = columnCount === 1 ? 'COLUMNAS' : `COLUMNAS ×${columnCount}`;
-  $('btn-columns').classList.toggle('active', columnCount > 1);
-});
-
-function makeColEditor(idx) {
-  const ta = document.createElement('textarea');
-  ta.className   = 'col-editor';
-  ta.id          = 'col-editor-' + idx;
-  ta.spellcheck  = false;
-  ta.placeholder = 'columna ' + (idx+1) + '…';
-  ta.setAttribute('autocomplete','off');
-  ta.setAttribute('autocorrect','off');
-  ta.style.fontFamily   = 'var(--editor-font)';
-  ta.style.fontSize     = 'var(--font-size)';
-  ta.style.lineHeight   = 'var(--line-height)';
-  return ta;
-}
-
-function applyColumns() {
-  const wrap = $('columns-wrap');
-  // preserve main editor (always first child)
-  const main = $('editor');
-  wrap.innerHTML = '';
-
-  if (columnCount === 1) {
-    // restore editor class
-    main.className = '';
-    main.style.padding = '52px 0';
-    wrap.appendChild(main);
-  } else {
-    main.className = 'col-editor';
-    main.style.padding = '52px 24px';
-    wrap.appendChild(main);
-    for (let i = 1; i < columnCount; i++) {
-      wrap.appendChild(makeColEditor(i));
-    }
-  }
-}
-
-// ── FIND & REPLACE ─────────────────────────────────────
-const findbar   = $('findbar');
-let findMatches = [];
-let findCurrent = 0;
-
-function openFindBar() {
-  findbar.style.display = 'flex';
-  $('find-input').focus();
-  $('find-input').select();
-  runFind();
-}
-function closeFindBar() {
-  findbar.style.display = 'none';
-  findMatches = [];
-  findCurrent = 0;
-  $('find-count').textContent = '';
-}
-
-function runFind() {
-  const q     = $('find-input').value;
-  const isRx  = $('find-regex').checked;
-  const isCi  = !$('find-case').checked;
-  findMatches = [];
-  if (!q) { $('find-count').textContent = ''; return; }
-  const text  = editor.value;
-  let rx;
-  try {
-    rx = new RegExp(isRx ? q : q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'g' + (isCi?'i':''));
-  } catch { $('find-count').textContent = 'regex inválido'; return; }
-
-  let m;
-  while ((m = rx.exec(text)) !== null) {
-    findMatches.push({ start: m.index, end: m.index + m[0].length, len: m[0].length });
-    if (findMatches.length > 5000) break;
-  }
-  $('find-count').textContent = findMatches.length ? `${findCurrent+1}/${findMatches.length}` : '0 resultados';
-  if (findMatches.length) highlightCurrent();
-}
-
-function highlightCurrent() {
-  if (!findMatches.length) return;
-  findCurrent = ((findCurrent % findMatches.length) + findMatches.length) % findMatches.length;
-  $('find-count').textContent = `${findCurrent+1}/${findMatches.length}`;
-  const m = findMatches[findCurrent];
-  editor.focus();
-  editor.setSelectionRange(m.start, m.end);
-  // Scroll into view
-  const lineN = editor.value.substring(0, m.start).split('\n').length;
-  const lineH = parseFloat(getComputedStyle(editor).lineHeight) || 24;
-  editor.scrollTop = Math.max(0, (lineN-1)*lineH - editor.clientHeight/2);
-}
-
-$('find-input').addEventListener('input',   () => { findCurrent=0; runFind(); });
-$('find-regex').addEventListener('change',  () => { findCurrent=0; runFind(); });
-$('find-case').addEventListener('change',   () => { findCurrent=0; runFind(); });
-$('find-next').addEventListener('click',    () => { findCurrent++; highlightCurrent(); });
-$('find-prev').addEventListener('click',    () => { findCurrent--; highlightCurrent(); });
-$('find-close').addEventListener('click',   closeFindBar);
-
-$('find-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter')  { e.shiftKey ? findCurrent-- : findCurrent++; highlightCurrent(); e.preventDefault(); }
-  if (e.key === 'Escape') { closeFindBar(); editor.focus(); }
-});
-
-$('find-replace-one').addEventListener('click', () => {
-  if (!findMatches.length) return;
-  const m   = findMatches[findCurrent];
-  const rep = $('replace-input').value;
-  editor.focus();
-  editor.setSelectionRange(m.start, m.end);
-  document.execCommand('insertText', false, rep);
-  findCurrent = 0;
-  runFind();
-});
-
-$('find-replace-all').addEventListener('click', () => {
-  const q   = $('find-input').value;
-  const rep = $('replace-input').value;
-  if (!q) return;
-  const isRx = $('find-regex').checked;
-  const isCi = !$('find-case').checked;
-  let rx;
-  try {
-    rx = new RegExp(isRx ? q : q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'g' + (isCi?'i':''));
-  } catch { return; }
-  const count = (editor.value.match(rx)||[]).length;
-  editor.value = editor.value.replace(rx, rep);
-  updateCounters();
-  findMatches = [];
-  $('find-count').textContent = '';
-  notify(`${count} reemplazos realizados`);
-});
-
-// ── PREVENT ACCIDENTAL CLOSE ─────────────────────────
+window.addEventListener('beforeunload', e=>{
   if (editor.value.trim().length>0) { e.preventDefault(); e.returnValue=''; }
 });
 
