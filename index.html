@@ -561,6 +561,84 @@
   }
   #ruler-tooltip.show { opacity: 1; }
 
+  /* ══ TOOLS DROPDOWN ══ */
+  #tools-dropdown { position: relative; }
+
+  #tools-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--bg);
+    border: 1px solid var(--fg);
+    z-index: 300;
+    min-width: 160px;
+    flex-direction: column;
+  }
+  #tools-menu.open { display: flex; }
+
+  .tools-menu-item {
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    color: var(--fg);
+    font-family: var(--ui-font);
+    font-size: 12px;
+    letter-spacing: 0.07em;
+    padding: 9px 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s;
+    white-space: nowrap;
+  }
+  .tools-menu-item:last-child { border-bottom: none; }
+  .tools-menu-item:hover { background: var(--fg); color: var(--bg); }
+  .tools-menu-item.active { background: var(--fg); color: var(--bg); }
+
+  /* ══ TOPBAR TOGGLE ══ */
+  #topbar-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 18px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 50;
+    background: none;
+    border: none;
+    color: var(--fg-dim);
+    font-size: 9px;
+  }
+  #topbar:hover #topbar-toggle { opacity: 1; }
+
+  #topbar-stub {
+    display: none;
+    align-items: center;
+    padding: 5px 20px 5px 16px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+    position: relative;
+  }
+  #topbar-stub.visible { display: flex; }
+  .stub-logo { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; opacity: 0.4; }
+  #topbar-show {
+    position: absolute;
+    right: 0;
+    top: 0; bottom: 0;
+    width: 18px;
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none;
+    color: var(--fg-dim); font-size: 9px;
+    cursor: pointer; opacity: 0;
+    transition: opacity 0.2s;
+  }
+  #topbar-stub:hover #topbar-show { opacity: 1; }
+
   /* ══ TYPEWRITER MODE ══ */
   body.typewriter #editor-wrap { align-items: flex-start; }
 
@@ -573,7 +651,7 @@
 <div id="app">
 
   <!-- TOP BAR -->
-  <div id="topbar">
+  <div id="topbar" style="position:relative;">
     <div id="topbar-left">
       <span class="logo">n0t3.zt</span>
       <span class="sep">·</span>
@@ -593,22 +671,43 @@
       </select>
     </div>
     <div id="topbar-right">
-      <button class="btn" id="btn-sprint">SPRINT</button>
-      <button class="btn" id="btn-timer">TIMER</button>
-      <button class="btn" id="btn-session">SESIÓN</button>
-      <button class="btn" id="btn-pomo">POMODORO</button>
+      <!-- Tools dropdown -->
+      <div id="tools-dropdown">
+        <button class="btn" id="btn-tools">HERRAMIENTAS ▾</button>
+        <div id="tools-menu">
+          <button class="tools-menu-item" id="tmenu-sprint">Sprint</button>
+          <button class="tools-menu-item" id="tmenu-timer">Timer</button>
+          <button class="tools-menu-item" id="tmenu-session">Sesión</button>
+          <button class="tools-menu-item" id="tmenu-pomo">Pomodoro</button>
+        </div>
+      </div>
       <span class="sep">·</span>
       <button class="btn" id="btn-export">EXPORTAR .TXT</button>
       <button class="btn" id="btn-export-enc">EXPORTAR ENC</button>
       <button class="btn" id="btn-import">IMPORTAR</button>
       <span class="sep">·</span>
       <button class="btn" id="btn-drive-connect">DRIVE</button>
-      <button class="btn" id="btn-drive-save"   style="display:none;">GUARDAR EN DRIVE</button>
-      <button class="btn" id="btn-drive-open"   style="display:none;">ABRIR DESDE DRIVE</button>
+      <button class="btn" id="btn-drive-save" style="display:none;">GUARDAR EN DRIVE</button>
+      <button class="btn" id="btn-drive-open" style="display:none;">ABRIR DESDE DRIVE</button>
       <span class="sep">·</span>
       <button class="btn" id="btn-clear" style="border-color:#cc3333; color:#cc3333;">BORRAR TODO</button>
-      <button class="btn-ghost" id="btn-keys">?</button>
+      <button class="btn-ghost" id="btn-keys" title="Atajos de teclado (Ctrl+Shift+H)">?</button>
     </div>
+    <button id="topbar-toggle" title="Ocultar barra">▲</button>
+  </div>
+
+  <!-- TOPBAR STUB (visible when topbar hidden) -->
+  <div id="topbar-stub">
+    <span class="stub-logo">n0t3.zt</span>
+    <button id="topbar-show" title="Mostrar barra">▼</button>
+  </div>
+
+  <!-- Hidden proxy buttons for tool JS listeners -->
+  <div style="display:none;">
+    <button id="btn-sprint"></button>
+    <button id="btn-timer"></button>
+    <button id="btn-session"></button>
+    <button id="btn-pomo"></button>
   </div>
 
   <!-- SPRINT PROGRESS BAR -->
@@ -2016,6 +2115,59 @@ async function loadFromDrive(fileId, fileName) {
 
 // Init Drive after page load
 window.addEventListener('load', initDrive);
+
+// ── TOOLS DROPDOWN ────────────────────────────────────
+const toolsMenu = $('tools-menu');
+$('btn-tools').addEventListener('click', e => {
+  e.stopPropagation();
+  toolsMenu.classList.toggle('open');
+});
+document.addEventListener('click', () => toolsMenu.classList.remove('open'));
+toolsMenu.addEventListener('click', e => e.stopPropagation());
+
+// Wire menu items → proxy buttons
+$('tmenu-sprint').addEventListener('click',  () => { toolsMenu.classList.remove('open'); $('btn-sprint').click();  });
+$('tmenu-timer').addEventListener('click',   () => { toolsMenu.classList.remove('open'); $('btn-timer').click();   });
+$('tmenu-session').addEventListener('click', () => { toolsMenu.classList.remove('open'); $('btn-session').click(); });
+$('tmenu-pomo').addEventListener('click',    () => { toolsMenu.classList.remove('open'); $('btn-pomo').click();    });
+
+// Sync menu item labels with proxy button state
+function syncToolLabels() {
+  const pairs = [
+    ['btn-sprint','tmenu-sprint','Sprint'],
+    ['btn-timer','tmenu-timer','Timer'],
+    ['btn-session','tmenu-session','Sesión'],
+    ['btn-pomo','tmenu-pomo','Pomodoro'],
+  ];
+  pairs.forEach(([src, dst, def]) => {
+    const srcEl = $(src), dstEl = $(dst);
+    dstEl.textContent = srcEl.textContent.trim() || def;
+    dstEl.classList.toggle('active', srcEl.classList.contains('active'));
+  });
+}
+const proxyObserver = new MutationObserver(syncToolLabels);
+['btn-sprint','btn-timer','btn-session','btn-pomo'].forEach(id =>
+  proxyObserver.observe($(id), { attributes: true, childList: true, characterData: true, subtree: true })
+);
+
+// ── TOPBAR HIDE / SHOW ────────────────────────────────
+$('topbar-toggle').addEventListener('click', () => {
+  $('topbar').style.display = 'none';
+  $('topbar-stub').classList.add('visible');
+  setTimeout(applyMargins, 0);
+});
+$('topbar-show').addEventListener('click', () => {
+  $('topbar').style.display = '';
+  $('topbar-stub').classList.remove('visible');
+  setTimeout(applyMargins, 0);
+});
+
+// ── KEYS PANEL ────────────────────────────────────────
+$('btn-keys').addEventListener('click', () => {
+  S.keysOpen = !S.keysOpen;
+  $('keys-panel').classList.toggle('open', S.keysOpen);
+});
+
 window.addEventListener('beforeunload', e=>{
   if (editor.value.trim().length>0) { e.preventDefault(); e.returnValue=''; }
 });
