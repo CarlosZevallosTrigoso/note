@@ -21,7 +21,6 @@
     --editor-font: 'Fira Code', monospace;
     --font-size: 15px;
     --line-height: 1.8;
-    --page-width: 65%;
   }
 
   .inverted {
@@ -100,26 +99,6 @@
   }
   .btn-ghost:hover { color: var(--fg); }
 
-  /* ══ MARGIN CONTROL ══ */
-  #margin-control { display: flex; align-items: center; gap: 6px; }
-  .margin-label { font-size: 12px; color: var(--fg-dim); }
-  .margin-input {
-    width: 52px;
-    background: none;
-    border: 1px solid var(--line);
-    color: var(--fg);
-    font-family: var(--ui-font);
-    font-size: 12px;
-    padding: 3px 6px;
-    outline: none;
-    text-align: center;
-    transition: border-color 0.15s;
-    -moz-appearance: textfield;
-  }
-  .margin-input::-webkit-inner-spin-button,
-  .margin-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-  .margin-input:focus { border-color: var(--fg); }
-
   /* ══ EDITOR ══ */
   #editor-wrap {
     flex: 1;
@@ -136,6 +115,7 @@
     margin-right: 120px;
   }
 
+  /* single-column: the textarea fills page */
   #editor {
     flex: 1;
     width: 100%;
@@ -157,6 +137,78 @@
   }
   #editor::placeholder { color: var(--fg-dimmer); font-style: italic; }
   #editor:disabled     { opacity: 0.3; cursor: not-allowed; }
+
+  /* ══ COLUMNS MODE ══ */
+  /* When columns > 1, #page becomes a row, #editor + col-editors fill it */
+  #page.cols {
+    flex-direction: row;
+    overflow: hidden;
+  }
+  #page.cols #editor,
+  .col-extra {
+    flex: 1;
+    padding: 52px 20px;
+    border-right: 1px solid var(--line);
+    overflow-y: auto;
+    overflow-x: hidden;
+    resize: none;
+    background: transparent;
+    border-top: none; border-bottom: none; border-left: none;
+    outline: none;
+    color: var(--fg);
+    font-family: var(--editor-font);
+    font-size: var(--font-size);
+    font-weight: 300;
+    line-height: var(--line-height);
+    caret-color: var(--fg);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+  }
+  #page.cols #editor {
+    width: auto;
+  }
+  .col-extra:last-child,
+  #page.cols #editor:last-child { border-right: none; }
+  .col-extra::placeholder { color: var(--fg-dimmer); font-style: italic; }
+
+  /* ══ FIND & REPLACE BAR ══ */
+  #findbar {
+    display: none;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+    flex-wrap: wrap;
+  }
+  #findbar.visible { display: flex; }
+  #find-input, #replace-input {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--fg);
+    font-family: var(--ui-font);
+    font-size: 12px;
+    padding: 3px 8px;
+    outline: none;
+    width: 160px;
+    transition: border-color 0.15s;
+  }
+  #find-input:focus, #replace-input:focus { border-color: var(--fg); }
+  .find-opt {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--fg-dim);
+    cursor: pointer; user-select: none;
+  }
+  .find-opt input { cursor: pointer; accent-color: var(--fg); }
+  #find-count {
+    font-size: 11px; color: var(--fg-dim);
+    min-width: 54px; white-space: nowrap;
+  }
+  .find-divider {
+    width: 1px; height: 16px; background: var(--line); flex-shrink: 0;
+  }
 
   /* ══ TIMER OVERLAY ══ */
   #timer-overlay {
@@ -212,6 +264,19 @@
     transition: width 0.6s;
   }
 
+  /* ══ SPRINT COUNTDOWN ══ */
+  #sprint-countdown {
+    display: none;
+    font-size: 12px;
+    letter-spacing: 0.07em;
+    color: var(--fg-dim);
+    white-space: nowrap;
+    padding: 2px 8px;
+    border: 1px solid var(--line);
+  }
+  #sprint-countdown.visible { display: inline; }
+  #sprint-countdown.warn    { color: #cc3333; border-color: #cc3333; }
+
   /* ══ STATUSBAR ══ */
   #statusbar {
     border-top: 1px solid var(--line);
@@ -245,7 +310,7 @@
   }
   .stat strong { color: var(--fg); font-weight: 500; }
 
-  #status-right { display: flex; align-items: center; gap: 12px; }
+  #status-right { display: flex; align-items: center; gap: 10px; }
 
   #session-clock {
     font-size: 13px;
@@ -305,6 +370,20 @@
     cursor: pointer; font-family: var(--ui-font); line-height: 1;
   }
 
+  /* sprint presets */
+  .sprint-presets { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sprint-preset {
+    font-size: 11px; padding: 3px 8px;
+    letter-spacing: 0.05em;
+  }
+
+  /* watermark note */
+  .wm-note {
+    font-size: 10px; color: var(--fg-dim);
+    line-height: 1.65; margin-bottom: 14px;
+    letter-spacing: 0.02em;
+  }
+
   /* ══ STATS OVERLAY ══ */
   #stats-overlay {
     display: none;
@@ -328,19 +407,6 @@
   }
   .stats-row strong { color: var(--fg); font-weight: 500; }
   .stats-actions { margin-top: 28px; display: flex; gap: 10px; flex-wrap: wrap; }
-
-  /* ══ HASH BLOCK ══ */
-  .hash-block {
-    margin-top: 18px;
-    border-top: 1px solid var(--line);
-    padding-top: 14px;
-  }
-  .hash-label { font-size: 9px; letter-spacing: 0.12em; color: var(--fg-dim); margin-bottom: 6px; }
-  .hash-val {
-    font-size: 9px; color: var(--fg);
-    word-break: break-all; line-height: 1.6; opacity: 0.7;
-  }
-  .hash-ts { font-size: 9px; color: var(--fg-dim); margin-top: 4px; }
 
   /* ══ NOTIFICATION ══ */
   #notif {
@@ -402,47 +468,31 @@
     min-width: 56px;
   }
 
-  #pomo-dots {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }
+  #pomo-dots { display: flex; gap: 6px; align-items: center; }
   .pomo-dot {
     width: 8px; height: 8px;
     border-radius: 50%;
     border: 1px solid var(--fg-dim);
     transition: background 0.3s;
   }
-  .pomo-dot.done  { background: var(--fg); border-color: var(--fg); }
+  .pomo-dot.done   { background: var(--fg); border-color: var(--fg); }
   .pomo-dot.active { background: none; border-color: var(--fg); box-shadow: 0 0 0 2px var(--fg); }
 
   #pomo-track {
-    flex: 1;
-    height: 2px;
-    background: var(--line);
-    min-width: 80px;
-    max-width: 200px;
-    position: relative;
+    flex: 1; height: 2px; background: var(--line);
+    min-width: 80px; max-width: 200px; position: relative;
   }
   #pomo-track-fill {
-    height: 100%;
-    background: var(--fg);
-    width: 0%;
-    transition: width 1s linear;
+    height: 100%; background: var(--fg);
+    width: 0%; transition: width 1s linear;
   }
-
   #pomo-controls { display: flex; gap: 6px; margin-left: auto; }
 
   /* ══ DRIVE FILE LIST ══ */
   .drive-file-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 9px 4px;
-    border-bottom: 1px solid var(--line);
-    cursor: pointer;
-    transition: background 0.1s;
-    gap: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 4px; border-bottom: 1px solid var(--line);
+    cursor: pointer; transition: background 0.1s; gap: 12px;
   }
   .drive-file-row:hover { background: var(--fg); }
   .drive-file-row:hover .drive-file-name,
@@ -461,103 +511,48 @@
     user-select: none;
     transition: background 0.2s;
   }
-
-  #ruler-track {
-    position: absolute;
-    top: 0; bottom: 0;
-    left: 0; right: 0;
-  }
-
-  /* tick marks */
-  #ruler-ticks {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
+  #ruler-ticks { position: absolute; inset: 0; pointer-events: none; }
 
   .ruler-handle {
-    position: absolute;
-    top: 0;
-    width: 12px;
-    height: 100%;
+    position: absolute; top: 0;
+    width: 12px; height: 100%;
     cursor: ew-resize;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     z-index: 2;
   }
   .ruler-handle::before {
-    content: '';
-    width: 2px;
-    height: 14px;
-    background: var(--fg);
-    opacity: 0.5;
-    transition: opacity 0.15s;
+    content: ''; width: 2px; height: 14px;
+    background: var(--fg); opacity: 0.5; transition: opacity 0.15s;
   }
   .ruler-handle:hover::before,
-  .ruler-handle.dragging::before {
-    opacity: 1;
-  }
-  /* arrow caps */
+  .ruler-handle.dragging::before { opacity: 1; }
   .ruler-handle::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 5px solid transparent;
+    content: ''; position: absolute; top: 50%;
+    transform: translateY(-50%); border: 5px solid transparent;
   }
-  #handle-left {
-    transform: translateX(-50%);
-  }
-  #handle-left::after {
-    border-right-color: var(--fg);
-    left: -2px;
-    opacity: 0.5;
-  }
-  #handle-right {
-    transform: translateX(-50%);
-  }
-  #handle-right::after {
-    border-left-color: var(--fg);
-    right: -2px;
-    opacity: 0.5;
-  }
-  #handle-left:hover::after,
-  #handle-left.dragging::after,
-  #handle-right:hover::after,
-  #handle-right.dragging::after {
-    opacity: 1;
-  }
+  #handle-left  { transform: translateX(-50%); }
+  #handle-left::after  { border-right-color: var(--fg); left: -2px; opacity: 0.5; }
+  #handle-right { transform: translateX(-50%); }
+  #handle-right::after { border-left-color: var(--fg); right: -2px; opacity: 0.5; }
+  #handle-left:hover::after, #handle-left.dragging::after,
+  #handle-right:hover::after, #handle-right.dragging::after { opacity: 1; }
 
-  /* shaded margin areas */
-  #ruler-shade-left,
-  #ruler-shade-right {
-    position: absolute;
-    top: 0; bottom: 0;
-    background: var(--fg);
-    opacity: 0.04;
-    pointer-events: none;
-    transition: background 0.2s;
+  #ruler-shade-left, #ruler-shade-right {
+    position: absolute; top: 0; bottom: 0;
+    background: var(--fg); opacity: 0.04;
+    pointer-events: none; transition: background 0.2s;
   }
   #ruler-shade-left  { left: 0; }
   #ruler-shade-right { right: 0; }
 
-  /* margin tooltip */
   #ruler-tooltip {
-    position: absolute;
-    top: 26px;
-    background: var(--fg);
-    color: var(--bg);
-    font-family: var(--ui-font);
-    font-size: 10px;
-    padding: 3px 7px;
-    letter-spacing: 0.06em;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.15s;
-    white-space: nowrap;
-    z-index: 10;
-    transform: translateX(-50%);
+    position: absolute; top: 26px;
+    background: var(--fg); color: var(--bg);
+    font-family: var(--ui-font); font-size: 10px;
+    padding: 3px 7px; letter-spacing: 0.06em;
+    pointer-events: none; opacity: 0;
+    transition: opacity 0.15s; white-space: nowrap;
+    z-index: 10; transform: translateX(-50%);
   }
   #ruler-tooltip.show { opacity: 1; }
 
@@ -566,90 +561,61 @@
   #drive-dropdown { position: relative; }
 
   #tools-menu {
-    display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    background: var(--bg);
-    border: 1px solid var(--fg);
-    z-index: 300;
-    min-width: 160px;
-    flex-direction: column;
+    display: none; position: absolute;
+    top: calc(100% + 6px); right: 0;
+    background: var(--bg); border: 1px solid var(--fg);
+    z-index: 300; min-width: 180px; flex-direction: column;
   }
   #tools-menu.open { display: flex; }
 
   #drive-menu {
-    display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    background: var(--bg);
-    border: 1px solid var(--fg);
-    z-index: 300;
-    min-width: 180px;
-    flex-direction: column;
+    display: none; position: absolute;
+    top: calc(100% + 6px); right: 0;
+    background: var(--bg); border: 1px solid var(--fg);
+    z-index: 300; min-width: 180px; flex-direction: column;
   }
   #drive-menu.open { display: flex; }
 
   .tools-menu-item {
-    background: none;
-    border: none;
+    background: none; border: none;
     border-bottom: 1px solid var(--line);
-    color: var(--fg);
-    font-family: var(--ui-font);
-    font-size: 12px;
-    letter-spacing: 0.07em;
-    padding: 9px 14px;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.12s;
-    white-space: nowrap;
+    color: var(--fg); font-family: var(--ui-font);
+    font-size: 12px; letter-spacing: 0.07em;
+    padding: 9px 14px; text-align: left;
+    cursor: pointer; transition: background 0.12s; white-space: nowrap;
   }
   .tools-menu-item:last-child { border-bottom: none; }
-  .tools-menu-item:hover { background: var(--fg); color: var(--bg); }
+  .tools-menu-item:hover  { background: var(--fg); color: var(--bg); }
   .tools-menu-item.active { background: var(--fg); color: var(--bg); }
+  .tools-menu-sep {
+    height: 1px; background: var(--line);
+    margin: 2px 0; pointer-events: none;
+  }
 
   /* ══ TOPBAR TOGGLE ══ */
   #topbar-toggle {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 18px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.2s;
-    z-index: 50;
-    background: none;
-    border: none;
-    color: var(--fg-dim);
-    font-size: 9px;
+    position: absolute; right: 0; top: 0;
+    width: 18px; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; opacity: 0; transition: opacity 0.2s;
+    z-index: 50; background: none; border: none;
+    color: var(--fg-dim); font-size: 9px;
   }
   #topbar:hover #topbar-toggle { opacity: 1; }
 
   #topbar-stub {
-    display: none;
-    align-items: center;
+    display: none; align-items: center;
     padding: 5px 20px 5px 16px;
     border-bottom: 1px solid var(--line);
-    flex-shrink: 0;
-    position: relative;
+    flex-shrink: 0; position: relative;
   }
   #topbar-stub.visible { display: flex; }
   .stub-logo { font-size: 12px; font-weight: 500; letter-spacing: 0.08em; opacity: 0.4; }
   #topbar-show {
-    position: absolute;
-    right: 0;
-    top: 0; bottom: 0;
-    width: 18px;
-    display: flex; align-items: center; justify-content: center;
-    background: none; border: none;
-    color: var(--fg-dim); font-size: 9px;
-    cursor: pointer; opacity: 0;
-    transition: opacity 0.2s;
+    position: absolute; right: 0; top: 0; bottom: 0;
+    width: 18px; display: flex; align-items: center; justify-content: center;
+    background: none; border: none; color: var(--fg-dim); font-size: 9px;
+    cursor: pointer; opacity: 0; transition: opacity 0.2s;
   }
   #topbar-stub:hover #topbar-show { opacity: 1; }
 
@@ -659,6 +625,8 @@
   /* ══ SCROLLBAR ══ */
   #editor::-webkit-scrollbar { width: 3px; }
   #editor::-webkit-scrollbar-thumb { background: var(--fg-dimmer); }
+  .col-extra::-webkit-scrollbar { width: 3px; }
+  .col-extra::-webkit-scrollbar-thumb { background: var(--fg-dimmer); }
 </style>
 </head>
 <body>
@@ -693,6 +661,9 @@
           <button class="tools-menu-item" id="tmenu-timer">Timer</button>
           <button class="tools-menu-item" id="tmenu-session">Sesión</button>
           <button class="tools-menu-item" id="tmenu-pomo">Pomodoro</button>
+          <div class="tools-menu-sep"></div>
+          <button class="tools-menu-item" id="tmenu-columns">Columnas</button>
+          <button class="tools-menu-item" id="tmenu-watermark">Watermark</button>
         </div>
       </div>
       <span class="sep">·</span>
@@ -731,6 +702,8 @@
     <button id="btn-timer"></button>
     <button id="btn-session"></button>
     <button id="btn-pomo"></button>
+    <button id="btn-columns"></button>
+    <button id="btn-watermark"></button>
   </div>
 
   <!-- SPRINT PROGRESS BAR -->
@@ -759,7 +732,23 @@
     <div id="ruler-tooltip"></div>
   </div>
 
-  <!-- TIMER OVERLAY (watermark behind text) -->
+  <!-- FIND & REPLACE BAR -->
+  <div id="findbar">
+    <input type="text" id="find-input" placeholder="buscar…" spellcheck="false">
+    <button class="btn" id="find-prev" title="Anterior (Shift+Enter)">◀</button>
+    <button class="btn" id="find-next" title="Siguiente (Enter)">▶</button>
+    <span id="find-count"></span>
+    <div class="find-divider"></div>
+    <input type="text" id="replace-input" placeholder="reemplazar…" spellcheck="false">
+    <button class="btn" id="find-replace-one">UNO</button>
+    <button class="btn" id="find-replace-all">TODO</button>
+    <div class="find-divider"></div>
+    <label class="find-opt"><input type="checkbox" id="find-regex"> .*</label>
+    <label class="find-opt"><input type="checkbox" id="find-case"> Aa</label>
+    <button class="btn-ghost" id="find-close" style="margin-left:auto;">×</button>
+  </div>
+
+  <!-- TIMER OVERLAY -->
   <div id="timer-overlay">
     <div id="timer-big">00:00</div>
     <div id="timer-label">TIMER ACTIVO</div>
@@ -787,6 +776,7 @@
       <div class="stat">Vel. escritura <strong id="cnt-wpm">— wpm</strong></div>
     </div>
     <div id="status-right">
+      <span id="sprint-countdown"></span>
       <span id="session-clock">00:00:00</span>
     </div>
   </div>
@@ -822,6 +812,7 @@
     <button id="btn-keys-close" style="background:none;border:none;color:var(--fg-dim);font-family:var(--ui-font);font-size:18px;cursor:pointer;line-height:1;padding:0 2px;">×</button>
   </div>
   <div class="key-row"><span>Invertir colores</span>        <kbd>Ctrl+I</kbd></div>
+  <div class="key-row"><span>Buscar y reemplazar</span>     <kbd>Ctrl+F</kbd></div>
   <div class="key-row"><span>Copiar todo</span>             <kbd>Ctrl+Shift+C</kbd></div>
   <div class="key-row"><span>Exportar .txt</span>           <kbd>Ctrl+S</kbd></div>
   <div class="key-row"><span>Borrar todo</span>             <kbd>Ctrl+Shift+X</kbd></div>
@@ -874,8 +865,26 @@
     <button class="modal-close-x" data-close="modal-sprint">×</button>
     <div class="modal-title">SPRINT DE ESCRITURA</div>
     <div class="modal-row">
-      <div class="modal-label">META DE PALABRAS</div>
+      <div class="modal-label">MODO</div>
+      <select class="modal-input" id="sprint-mode">
+        <option value="words-up">Palabras — contar hacia arriba</option>
+        <option value="words-down">Palabras — límite regresivo</option>
+        <option value="chars-down">Caracteres — límite regresivo</option>
+      </select>
+    </div>
+    <div class="modal-row">
+      <div class="modal-label" id="sprint-goal-label">META DE PALABRAS</div>
       <input type="number" class="modal-input" id="sprint-goal" value="500" min="1" max="99999">
+    </div>
+    <div class="modal-row" id="sprint-presets-row" style="display:none;">
+      <div class="modal-label">PRESETS</div>
+      <div class="sprint-presets">
+        <button class="btn sprint-preset" data-val="17">Haiku 17</button>
+        <button class="btn sprint-preset" data-val="280">Tweet 280</button>
+        <button class="btn sprint-preset" data-val="140">SMS 140</button>
+        <button class="btn sprint-preset" data-val="250">Abstract 250</button>
+        <button class="btn sprint-preset" data-val="500">Abstract 500</button>
+      </div>
     </div>
     <div class="modal-row">
       <div class="modal-label">AL ALCANZAR LA META</div>
@@ -887,6 +896,49 @@
     <div class="modal-actions">
       <button class="btn" data-close="modal-sprint">CANCELAR</button>
       <button class="btn active" id="sprint-start-btn">INICIAR SPRINT</button>
+    </div>
+  </div>
+</div>
+
+<!-- WATERMARK SETTINGS -->
+<div class="modal-wrap" id="modal-watermark">
+  <div class="modal-backdrop"></div>
+  <div class="modal-box">
+    <button class="modal-close-x" data-close="modal-watermark">×</button>
+    <div class="modal-title">WATERMARK INVISIBLE</div>
+    <p class="wm-note">Se incrusta como caracteres Unicode de ancho cero al exportar .txt y .cryptpad. Imperceptible visualmente, detectable con análisis de texto.</p>
+    <div class="modal-row">
+      <div class="modal-label">ACTIVAR EN EXPORTACIONES</div>
+      <select class="modal-input" id="wm-enabled">
+        <option value="yes">Sí</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">AUTOR / ALIAS (opcional)</div>
+      <input type="text" class="modal-input" id="wm-author" placeholder="ej: carlos">
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">ETIQUETA PERSONALIZADA (opcional)</div>
+      <input type="text" class="modal-input" id="wm-custom" placeholder="ej: borrador, proyecto-x">
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">INCLUIR TIMESTAMP</div>
+      <select class="modal-input" id="wm-ts">
+        <option value="yes">Sí</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    <div class="modal-row">
+      <div class="modal-label">INCLUIR HUELLA DEL DISPOSITIVO</div>
+      <select class="modal-input" id="wm-device">
+        <option value="yes">Sí</option>
+        <option value="no">No</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="wm-decode-btn">DECODIFICAR TEXTO ACTUAL</button>
+      <button class="btn active" data-close="modal-watermark">LISTO</button>
     </div>
   </div>
 </div>
@@ -1081,6 +1133,8 @@ const S = {
   sprintGoal:   0,
   sprintBase:   0,
   sprintExpire: 'continue',
+  sprintMode:   'words-up',   // 'words-up' | 'words-down' | 'chars-down'
+  sprintFrozen: false,
   // wpm sliding window
   wpmWindow:  [],
   wpmTick:    null,
@@ -1137,16 +1191,39 @@ function updateCounters() {
 
   if (S.sessionActive) S.wpmWindow.push({t:Date.now(), w});
 
-  // sprint progress
+  // sprint progress — handles all 3 modes
   if (S.sprintActive) {
-    const gained   = Math.max(0, w - S.sprintBase);
-    const progress = Math.min(gained / S.sprintGoal, 1);
-    $('sprint-bar').style.width = (progress*100)+'%';
-    if (progress >= 1) completeSprint();
+    const mode = S.sprintMode;
+    if (mode === 'words-up') {
+      const gained   = Math.max(0, w - S.sprintBase);
+      const progress = Math.min(gained / S.sprintGoal, 1);
+      $('sprint-bar').style.width = (progress * 100) + '%';
+      if (progress >= 1) completeSprint();
+    } else if (mode === 'words-down') {
+      const used      = Math.max(0, w - S.sprintBase);
+      const remaining = Math.max(0, S.sprintGoal - used);
+      const progress  = Math.min(used / S.sprintGoal, 1);
+      $('sprint-bar').style.width = (progress * 100) + '%';
+      updateSprintCountdown(remaining, 'pal');
+      if (remaining <= 0) completeSprint();
+    } else if (mode === 'chars-down') {
+      const used      = Math.max(0, t.length - S.sprintBase);
+      const remaining = Math.max(0, S.sprintGoal - used);
+      const progress  = Math.min(used / S.sprintGoal, 1);
+      $('sprint-bar').style.width = (progress * 100) + '%';
+      updateSprintCountdown(remaining, 'car');
+      if (remaining <= 0) completeSprint();
+    }
   }
 
   // finalizar keyword
   if (S.sessionActive && editor.value.trimEnd().endsWith('finalizar')) endSession();
+}
+
+function updateSprintCountdown(remaining, unit) {
+  const el = $('sprint-countdown');
+  el.textContent = remaining.toLocaleString() + ' ' + unit + ' restantes';
+  el.classList.toggle('warn', remaining <= Math.ceil(S.sprintGoal * 0.1));
 }
 
 // ── WPM ────────────────────────────────────────────────
@@ -1197,7 +1274,6 @@ function drawTicks() {
   ctx.strokeStyle = getComputedStyle(document.documentElement)
     .getPropertyValue('--fg-dimmer').trim() || '#cccccc';
   ctx.lineWidth = 1;
-  // tick every 10px, longer every 50px
   for (let x = 0; x <= W; x += 10) {
     const isMajor = x % 50 === 0;
     const tickH   = isMajor ? 10 : 5;
@@ -1230,7 +1306,6 @@ function makeDraggable(handle, side) {
       const newM = Math.max(0, Math.min(W * 0.7, startMargin + dx));
       if (side === 'left') {
         marginLeft  = Math.round(newM);
-        // don't let handles overlap
         if (marginLeft + marginRight > W * 0.85) marginLeft = Math.round(W * 0.85 - marginRight);
       } else {
         marginRight = Math.round(newM);
@@ -1254,7 +1329,6 @@ function makeDraggable(handle, side) {
     document.addEventListener('mouseup',   onUp);
   });
 
-  // touch support
   handle.addEventListener('touchstart', e => {
     e.preventDefault();
     startX      = e.touches[0].clientX;
@@ -1289,7 +1363,6 @@ function makeDraggable(handle, side) {
 makeDraggable(handleL, 'left');
 makeDraggable(handleR, 'right');
 
-// init ruler after layout
 window.addEventListener('resize', applyMargins);
 
 // ── invert ─────────────────────────────────────────────
@@ -1305,18 +1378,17 @@ $('btn-invert').addEventListener('click', toggleInvert);
 const P = {
   active:      false,
   paused:      false,
-  phase:       'work',   // 'work' | 'short' | 'long'
-  currentCycle: 0,       // completed work cycles
-  pomoCurrent:  0,       // work cycles since last long break
+  phase:       'work',
+  currentCycle: 0,
+  pomoCurrent:  0,
   remaining:    0,
   total:        0,
   interval:     null,
-  // config
   work:         25,
   short:        5,
   long:         15,
   beforeLong:   4,
-  cycles:       0,       // 0 = infinite
+  cycles:       0,
   freezeBreak:  true,
 };
 
@@ -1396,22 +1468,10 @@ function onPomoPhaseEnd() {
     P.currentCycle++;
     P.pomoCurrent++;
     markDot(P.currentCycle - 1);
-
-    // check total cycles limit
-    if (P.cycles > 0 && P.currentCycle >= P.cycles) {
-      stopPomo(true);
-      return;
-    }
-
-    // decide next break
-    if (P.pomoCurrent >= P.beforeLong) {
-      P.pomoCurrent = 0;
-      beginPhase('long');
-    } else {
-      beginPhase('short');
-    }
+    if (P.cycles > 0 && P.currentCycle >= P.cycles) { stopPomo(true); return; }
+    if (P.pomoCurrent >= P.beforeLong) { P.pomoCurrent = 0; beginPhase('long'); }
+    else { beginPhase('short'); }
   } else {
-    // break ended → next work
     buildPomoDots();
     beginPhase('work');
   }
@@ -1440,10 +1500,7 @@ function buildPomoDots() {
 
 function markDot(idx) {
   const dots = $('pomo-dots').querySelectorAll('.pomo-dot');
-  if (dots[idx]) {
-    dots[idx].classList.remove('active');
-    dots[idx].classList.add('done');
-  }
+  if (dots[idx]) { dots[idx].classList.remove('active'); dots[idx].classList.add('done'); }
   if (dots[idx + 1]) dots[idx + 1].classList.add('active');
 }
 
@@ -1465,32 +1522,22 @@ $('pomo-pause-btn').addEventListener('click', ()=>{
   P.paused = !P.paused;
   $('pomo-pause-btn').textContent = P.paused ? 'REANUDAR' : 'PAUSAR';
   $('pomo-pause-btn').classList.toggle('active', P.paused);
-  if (P.paused && P.freezeBreak && P.phase !== 'work') {
-    // already frozen, fine
-  }
-  if (!P.paused && P.phase !== 'work' && P.freezeBreak) {
-    editor.disabled = true;
-  }
-  if (!P.paused && P.phase === 'work') {
-    editor.disabled = false;
-  }
+  if (!P.paused && P.phase !== 'work' && P.freezeBreak) editor.disabled = true;
+  if (!P.paused && P.phase === 'work') editor.disabled = false;
 });
-
 $('pomo-skip-btn').addEventListener('click', ()=>{
   if (!P.active) return;
   clearInterval(P.interval);
   onPomoPhaseEnd();
 });
-
 $('pomo-stop-btn').addEventListener('click', ()=> stopPomo());
 
-// ── size switcher ──────────────────────────────────────
+// ── size & font switcher ───────────────────────────────
 const SIZES = {
   s: { size: '15px', lh: '1.8'  },
   m: { size: '18px', lh: '1.85' },
   l: { size: '22px', lh: '1.9'  },
 };
-// per-font base sizes for scaling
 const FONT_BASE_SIZES = {
   fira:    { s: '15px', m: '18px', l: '22px' },
   lora:    { s: '17px', m: '20px', l: '24px' },
@@ -1507,15 +1554,20 @@ $('size-select').addEventListener('change', function() {
 });
 
 function applyFontAndSize() {
-  const f = FONTS[currentFontKey];
+  const f  = FONTS[currentFontKey];
   const sz = FONT_BASE_SIZES[currentFontKey][currentSizeKey];
   const lh = SIZES[currentSizeKey].lh;
   document.documentElement.style.setProperty('--editor-font', f.family);
   document.documentElement.style.setProperty('--font-size',   sz);
   document.documentElement.style.setProperty('--line-height', lh);
+  // also update extra col editors
+  document.querySelectorAll('.col-extra').forEach(ta => {
+    ta.style.fontFamily  = f.family;
+    ta.style.fontSize    = sz;
+    ta.style.lineHeight  = lh;
+  });
 }
 
-// ── font switcher ──────────────────────────────────────
 const FONTS = {
   fira:    { family: "'Fira Code', monospace",  size: '15px', lh: '1.8'  },
   lora:    { family: "'Lora', serif",            size: '17px', lh: '1.9'  },
@@ -1531,17 +1583,17 @@ $('font-select').addEventListener('change', function() {
 // ── typewriter ─────────────────────────────────────────
 function toggleTypewriter() {
   S.typewriter = !S.typewriter;
-  $('btn-typewriter').classList.toggle('active', S.typewriter);
   document.body.classList.toggle('typewriter', S.typewriter);
   if (S.typewriter) editor.addEventListener('input', scrollTypewriter);
   else              editor.removeEventListener('input', scrollTypewriter);
 }
 function scrollTypewriter() {
-  const cur = editor.selectionStart;
+  const cur  = editor.selectionStart;
   const lineN = editor.value.substring(0,cur).split('\n').length;
   const wrap  = $('editor-wrap');
   wrap.scrollTop = Math.max(0, lineN*26 - wrap.clientHeight/2);
 }
+
 // ── CLEAR ─────────────────────────────────────────────
 $('btn-clear').addEventListener('click', ()=>openModal('modal-clear'));
 $('clear-confirm-btn').addEventListener('click', ()=>{
@@ -1599,8 +1651,7 @@ function renderTimerBig() {
   const m  = Math.floor(r/60);
   const s  = r%60;
   $('timer-big').textContent = pad2(m)+':'+pad2(s);
-  const ov = $('timer-overlay');
-  ov.classList.toggle('warning', r<=30 && r>0);
+  $('timer-overlay').classList.toggle('warning', r<=30 && r>0);
 }
 
 function onTimerExpire() {
@@ -1707,6 +1758,19 @@ $('btn-sprint').addEventListener('click', ()=>{
   openModal('modal-sprint');
 });
 
+// Sprint modal mode UI
+$('sprint-mode').addEventListener('change', function() {
+  const isDown  = this.value !== 'words-up';
+  const isChars = this.value === 'chars-down';
+  $('sprint-goal-label').textContent = isChars ? 'LÍMITE DE CARACTERES' : isDown ? 'LÍMITE DE PALABRAS' : 'META DE PALABRAS';
+  $('sprint-presets-row').style.display = isDown ? '' : 'none';
+  if (!isDown) $('sprint-goal').value = 500;
+});
+
+document.querySelectorAll('.sprint-preset').forEach(btn => {
+  btn.addEventListener('click', () => { $('sprint-goal').value = btn.dataset.val; });
+});
+
 function resumeFromSprint() {
   S.sprintFrozen=false;
   editor.disabled=false;
@@ -1715,32 +1779,48 @@ function resumeFromSprint() {
   $('btn-sprint').textContent='SPRINT';
   $('sprint-bar-wrap').style.display='none';
   $('sprint-bar').style.background='var(--fg)';
+  $('sprint-countdown').classList.remove('visible','warn');
   notify('ESCRITURA REANUDADA');
 }
+
 $('sprint-start-btn').addEventListener('click', ()=>{
   const goal = parseInt($('sprint-goal').value);
   if (!goal||goal<1) return notify('META INVÁLIDA');
+  S.sprintMode   = $('sprint-mode').value;
   S.sprintGoal   = goal;
-  S.sprintBase   = words(editor.value);
+  S.sprintBase   = S.sprintMode === 'chars-down' ? editor.value.length : words(editor.value);
   S.sprintExpire = $('sprint-expire').value;
   S.sprintActive = true;
   $('sprint-bar-wrap').style.display='block';
   $('sprint-bar').style.width='0%';
   $('btn-sprint').classList.add('active');
   $('btn-sprint').textContent = 'DETENER SPRINT';
+
+  // show countdown widget for regressive modes
+  const cd = $('sprint-countdown');
+  if (S.sprintMode !== 'words-up') {
+    cd.textContent = goal + (S.sprintMode === 'chars-down' ? ' car. restantes' : ' pal. restantes');
+    cd.classList.add('visible');
+    cd.classList.remove('warn');
+  } else {
+    cd.classList.remove('visible');
+  }
+
   closeModal('modal-sprint');
-  notify(`SPRINT: META ${goal} PALABRAS`);
+  const modeLabel = S.sprintMode === 'chars-down' ? 'CARACTERES' :
+                    S.sprintMode === 'words-down'  ? 'PALABRAS (↓)' : 'PALABRAS';
+  notify(`SPRINT: ${goal} ${modeLabel}`);
 });
 
 function completeSprint() {
   S.sprintActive=false;
   $('sprint-bar').style.background='#22aa55';
+  $('sprint-countdown').classList.remove('visible','warn');
 
   if (S.sprintExpire==='freeze') {
     editor.disabled=true;
     $('btn-sprint').classList.add('active');
     $('btn-sprint').textContent='REANUDAR ESCRITURA';
-    // next click on btn-sprint will unfreeze
     S.sprintFrozen=true;
     notify('¡SPRINT COMPLETADO! Pulsa REANUDAR ESCRITURA para continuar.', 5000);
   } else {
@@ -1756,12 +1836,76 @@ function completeSprint() {
 
 function endSprint() {
   S.sprintActive=false;
+  S.sprintFrozen=false;
   $('sprint-bar-wrap').style.display='none';
+  $('sprint-countdown').classList.remove('visible','warn');
   $('btn-sprint').classList.remove('active');
   $('btn-sprint').textContent='SPRINT';
   editor.disabled=false;
   notify('SPRINT CANCELADO');
 }
+
+// ── WATERMARK (zero-width encoding) ───────────────────
+// ZW chars: ZWSP=U+200B (bit 0), ZWNJ=U+200C (bit 1), ZWJ=U+200D (separator)
+const WM_0 = '\u200B';
+const WM_1 = '\u200C';
+const WM_SEP = '\u200D';
+
+function wmEncode(str) {
+  return str.split('').map(ch => {
+    const bits = ch.charCodeAt(0).toString(2).padStart(8, '0');
+    return bits.split('').map(b => b === '0' ? WM_0 : WM_1).join('');
+  }).join(WM_SEP);
+}
+
+function wmDecode(text) {
+  // Extract only ZW chars
+  const zwOnly = [...text].filter(c => c === WM_0 || c === WM_1 || c === WM_SEP).join('');
+  if (!zwOnly) return null;
+  const byteGroups = zwOnly.split(WM_SEP);
+  try {
+    return byteGroups.map(g => {
+      if (!g) return '';
+      const code = parseInt(g.split('').map(c => c === WM_0 ? '0' : '1').join(''), 2);
+      return String.fromCharCode(code);
+    }).join('');
+  } catch { return null; }
+}
+
+function wmBuildPayload() {
+  if ($('wm-enabled').value !== 'yes') return '';
+  const parts = [];
+  const author = $('wm-author').value.trim();
+  const custom = $('wm-custom').value.trim();
+  if (author) parts.push('author:' + author);
+  if (custom) parts.push('tag:' + custom);
+  if ($('wm-ts').value === 'yes') parts.push('ts:' + new Date().toISOString());
+  if ($('wm-device').value === 'yes') {
+    const fp = [navigator.language, screen.width + 'x' + screen.height, navigator.hardwareConcurrency + 'c'].join('|');
+    parts.push('device:' + fp);
+  }
+  if (!parts.length) return '';
+  return wmEncode(parts.join(';'));
+}
+
+function wmInject(text) {
+  const payload = wmBuildPayload();
+  if (!payload) return text;
+  // inject at ~40% of text length
+  const pos = Math.floor(text.length * 0.4);
+  return text.slice(0, pos) + payload + text.slice(pos);
+}
+
+// Watermark modal
+$('btn-watermark').addEventListener('click', () => openModal('modal-watermark'));
+$('wm-decode-btn').addEventListener('click', () => {
+  const result = wmDecode(editor.value);
+  if (result && result.trim()) {
+    notify('WATERMARK: ' + result, 6000);
+  } else {
+    notify('NO HAY WATERMARK EN EL TEXTO ACTUAL');
+  }
+});
 
 // ── EXPORT .TXT ────────────────────────────────────────
 $('btn-export').addEventListener('click', exportTxt);
@@ -1769,7 +1913,7 @@ async function exportTxt() {
   const t = editor.value;
   if (!t.trim()) return notify('NADA QUE EXPORTAR');
   const sig = await buildSignature(t);
-  const out  = t + '\n\n' + sig;
+  const out  = wmInject(t) + '\n\n' + sig;
   downloadText(out, 'nota-'+nowFilename()+'.txt');
 }
 
@@ -1783,9 +1927,9 @@ $('enc-export-btn').addEventListener('click', async ()=>{
   const t = editor.value;
   if (!t.trim()) return notify('NADA QUE EXPORTAR');
   try {
-    let payload = t;
+    let payload = wmInject(t);
     if ($('enc-include-sig').value==='yes') {
-      payload = t + '\n\n' + await buildSignature(t);
+      payload = payload + '\n\n' + await buildSignature(t);
     }
     const enc  = await encryptText(payload, p1);
     downloadText(enc, 'nota-'+nowFilename()+'.cryptpad');
@@ -1811,9 +1955,8 @@ $('import-btn').addEventListener('click', async ()=>{
     if (isEnc) {
       const pass = $('import-pass').value;
       if (!pass) return notify('INTRODUCE LA CONTRASEÑA');
-      try { text = await decryptText(text); }
+      try { text = await decryptText(text, pass); }
       catch { return notify('ERROR: CONTRASEÑA INCORRECTA O ARCHIVO DAÑADO'); }
-      // decryptText doesn't use pass yet — fixed below
     }
     editor.value=text; updateCounters(); closeModal('modal-import'); notify('IMPORTADO');
   };
@@ -1916,9 +2059,182 @@ editor.addEventListener('paste', e=>{
   document.execCommand('insertText', false, text);
 });
 
+// ── COLUMNS MODE ──────────────────────────────────────
+let columnCount = 1;
+
+$('btn-columns').addEventListener('click', () => {
+  columnCount = columnCount >= 3 ? 1 : columnCount + 1;
+  applyColumns();
+});
+
+function applyColumns() {
+  const page = $('page');
+  // Remove existing extra columns
+  page.querySelectorAll('.col-extra').forEach(el => el.remove());
+
+  if (columnCount === 1) {
+    page.classList.remove('cols');
+    editor.style.padding = '52px 0';
+    editor.style.borderRight = '';
+    $('btn-columns').classList.remove('active');
+    $('btn-columns').textContent = 'COLUMNAS';
+  } else {
+    page.classList.add('cols');
+    // In cols mode CSS handles editor padding via #page.cols #editor
+    editor.style.padding = '';
+    editor.style.borderRight = '';
+    for (let i = 1; i < columnCount; i++) {
+      const ta = document.createElement('textarea');
+      ta.className = 'col-extra';
+      ta.spellcheck = false;
+      ta.setAttribute('autocomplete', 'off');
+      ta.setAttribute('autocorrect',  'off');
+      ta.setAttribute('autocapitalize', 'off');
+      ta.placeholder = 'columna ' + (i + 1) + '…';
+      // match current font settings
+      const f  = FONTS[currentFontKey];
+      const sz = FONT_BASE_SIZES[currentFontKey][currentSizeKey];
+      const lh = SIZES[currentSizeKey].lh;
+      ta.style.fontFamily = f.family;
+      ta.style.fontSize   = sz;
+      ta.style.lineHeight = lh;
+      page.appendChild(ta);
+    }
+    $('btn-columns').classList.add('active');
+    $('btn-columns').textContent = `COLUMNAS ×${columnCount}`;
+  }
+}
+
+// ── FIND & REPLACE ────────────────────────────────────
+let findMatches   = [];
+let findCurrent   = -1;
+const findbar     = $('findbar');
+
+function openFindBar() {
+  findbar.classList.add('visible');
+  $('find-input').focus();
+  $('find-input').select();
+  runFind();
+}
+
+function closeFindBar() {
+  findbar.classList.remove('visible');
+  findMatches = [];
+  findCurrent = -1;
+  $('find-count').textContent = '';
+  editor.focus();
+}
+
+function buildRegex() {
+  const q      = $('find-input').value;
+  const useRx  = $('find-regex').checked;
+  const noCase = !$('find-case').checked;
+  if (!q) return null;
+  try {
+    const pattern = useRx ? q : q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(pattern, 'g' + (noCase ? 'i' : ''));
+  } catch { return null; }
+}
+
+function runFind() {
+  const rx = buildRegex();
+  findMatches = [];
+  findCurrent = -1;
+  if (!rx) { $('find-count').textContent = ''; return; }
+  const text = editor.value;
+  let m;
+  while ((m = rx.exec(text)) !== null) {
+    findMatches.push({ start: m.index, end: m.index + m[0].length });
+    if (findMatches.length > 4000) break; // safety
+  }
+  if (findMatches.length > 0) {
+    findCurrent = 0;
+    jumpToMatch(0);
+  }
+  updateFindCount();
+}
+
+function jumpToMatch(idx) {
+  if (!findMatches.length) return;
+  idx = ((idx % findMatches.length) + findMatches.length) % findMatches.length;
+  findCurrent = idx;
+  const m = findMatches[idx];
+  editor.focus();
+  editor.setSelectionRange(m.start, m.end);
+  // scroll textarea to match
+  const linesAbove = editor.value.substring(0, m.start).split('\n').length - 1;
+  const lineHeight = parseFloat(getComputedStyle(editor).lineHeight) || 26;
+  editor.scrollTop = Math.max(0, linesAbove * lineHeight - editor.clientHeight / 3);
+  updateFindCount();
+}
+
+function updateFindCount() {
+  if (!findMatches.length) {
+    $('find-count').textContent = $('find-input').value ? '0 resultados' : '';
+  } else {
+    $('find-count').textContent = (findCurrent + 1) + ' / ' + findMatches.length;
+  }
+}
+
+$('find-input').addEventListener('input',  () => runFind());
+$('find-regex').addEventListener('change', () => runFind());
+$('find-case').addEventListener('change',  () => runFind());
+$('find-next').addEventListener('click',   () => jumpToMatch(findCurrent + 1));
+$('find-prev').addEventListener('click',   () => jumpToMatch(findCurrent - 1));
+$('find-close').addEventListener('click',  closeFindBar);
+
+$('find-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    e.shiftKey ? jumpToMatch(findCurrent - 1) : jumpToMatch(findCurrent + 1);
+  }
+  if (e.key === 'Escape') { e.preventDefault(); closeFindBar(); }
+});
+
+$('replace-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); doReplaceOne(); }
+  if (e.key === 'Escape') { e.preventDefault(); closeFindBar(); }
+});
+
+$('find-replace-one').addEventListener('click', doReplaceOne);
+$('find-replace-all').addEventListener('click', doReplaceAll);
+
+function doReplaceOne() {
+  if (!findMatches.length || findCurrent < 0) return;
+  const m   = findMatches[findCurrent];
+  const rep = $('replace-input').value;
+  // Use execCommand to preserve undo history
+  editor.focus();
+  editor.setSelectionRange(m.start, m.end);
+  document.execCommand('insertText', false, rep);
+  updateCounters();
+  runFind();
+}
+
+function doReplaceAll() {
+  const rx = buildRegex();
+  if (!rx) return;
+  const rep   = $('replace-input').value;
+  const count = (editor.value.match(rx) || []).length;
+  if (!count) return notify('SIN COINCIDENCIAS');
+  editor.value = editor.value.replace(rx, rep);
+  updateCounters();
+  findMatches = [];
+  findCurrent = -1;
+  $('find-count').textContent = '';
+  notify(count + ' reemplazos realizados');
+}
+
 // ── KEYBOARD SHORTCUTS ─────────────────────────────────
 document.addEventListener('keydown', e=>{
   const ctrl = e.ctrlKey||e.metaKey;
+  // Ctrl+F — find bar
+  if (ctrl && e.key==='f') {
+    e.preventDefault();
+    if (findbar.classList.contains('visible')) closeFindBar();
+    else openFindBar();
+    return;
+  }
   if (ctrl && e.key==='i')                         { e.preventDefault(); toggleInvert(); }
   if (ctrl && e.key==='t')                         { e.preventDefault(); toggleTypewriter(); }
   if (ctrl && e.key==='s')                         { e.preventDefault(); exportTxt(); }
@@ -1931,6 +2247,8 @@ document.addEventListener('keydown', e=>{
   if (ctrl && e.shiftKey && (e.key==='E'||e.key==='e')) { e.preventDefault(); S.sessionActive?endSession():startSession(); }
   if (ctrl && e.shiftKey && (e.key==='H'||e.key==='h')) { e.preventDefault(); S.keysOpen=!S.keysOpen; $('keys-panel').classList.toggle('open',S.keysOpen); }
   if (e.key==='Escape') {
+    // Close findbar first if open
+    if (findbar.classList.contains('visible')) { closeFindBar(); return; }
     document.querySelectorAll('.modal-wrap.open').forEach(m=>closeModal(m.id));
     $('stats-overlay').classList.remove('open');
     if (S.keysOpen) { closeKeysPanel(); }
@@ -1954,11 +2272,8 @@ const DRIVE = {
   currentFileName: null,
 };
 
-// Load gapi client
 function initGapiClient() {
-  gapi.client.init({}).then(() => {
-    // gapi ready — token client handles auth separately
-  });
+  gapi.client.init({}).then(() => {});
 }
 
 let tokenClient;
@@ -1980,7 +2295,6 @@ function initDrive() {
       gapi.client.setToken({ access_token: DRIVE.token });
       $('btn-drive-connect').textContent = 'DRIVE ✓';
       $('btn-drive-connect').classList.add('active');
-      // show dropdown items
       $('dmenu-save').style.display       = '';
       $('dmenu-open').style.display       = '';
       $('dmenu-disconnect').style.display = '';
@@ -1990,9 +2304,6 @@ function initDrive() {
   });
 }
 
-// btn-drive-connect is now handled by the Drive dropdown below
-
-// ── Ensure n0t3.xyz folder exists in Drive ──
 async function ensureDriveFolder() {
   const res = await driveRequest(
     `https://www.googleapis.com/drive/v3/files?q=name='${DRIVE.FOLDER_NAME}'+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name)`,
@@ -2000,8 +2311,6 @@ async function ensureDriveFolder() {
   );
   const data = await res.json();
   if (data.files && data.files.length > 0) return data.files[0].id;
-
-  // Create folder
   const create = await driveRequest(
     'https://www.googleapis.com/drive/v3/files',
     'POST',
@@ -2011,24 +2320,18 @@ async function ensureDriveFolder() {
   return folder.id;
 }
 
-// ── Generic Drive fetch helper ──
 async function driveRequest(url, method='GET', body=null) {
   const opts = {
     method,
-    headers: {
-      'Authorization': 'Bearer ' + DRIVE.token,
-      'Content-Type':  'application/json',
-    },
+    headers: { 'Authorization': 'Bearer ' + DRIVE.token, 'Content-Type': 'application/json' },
   };
   if (body) opts.body = JSON.stringify(body);
   return fetch(url, opts);
 }
 
-// ── Save to Drive ──
 $('btn-drive-save').addEventListener('click', () => {
   if (!DRIVE.connected) return notify('CONECTA DRIVE PRIMERO');
   if (!editor.value.trim()) return notify('NADA QUE GUARDAR');
-  // Prefill with current filename or timestamp
   $('drive-save-name').value = DRIVE.currentFileName
     ? DRIVE.currentFileName.replace(/\.txt$/, '')
     : 'nota-' + nowFilename();
@@ -2040,7 +2343,7 @@ $('btn-drive-save').addEventListener('click', () => {
 });
 
 $('drive-save-confirm').addEventListener('click', async () => {
-  let name = ($('drive-save-name').value.trim() || 'nota') ;
+  let name = ($('drive-save-name').value.trim() || 'nota');
   if (!name.endsWith('.txt')) name += '.txt';
   closeModal('modal-drive-save');
   notify('GUARDANDO EN DRIVE…');
@@ -2056,23 +2359,20 @@ $('drive-save-confirm').addEventListener('click', async () => {
 async function saveToDrive(filename) {
   const content = editor.value;
   const sig     = await buildSignature(content);
-  const full    = content + '\n\n' + sig;
+  const full    = wmInject(content) + '\n\n' + sig;
   const blob    = new Blob([full], { type: 'text/plain' });
 
   if (DRIVE.currentFileId) {
-    // Update existing file (PATCH)
     await fetch(
       `https://www.googleapis.com/upload/drive/v3/files/${DRIVE.currentFileId}?uploadType=media`,
       { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + DRIVE.token, 'Content-Type': 'text/plain' }, body: blob }
     );
-    // Rename if needed
     await driveRequest(
       `https://www.googleapis.com/drive/v3/files/${DRIVE.currentFileId}`,
       'PATCH', { name: filename }
     );
     DRIVE.currentFileName = filename;
   } else {
-    // Create new file with multipart upload
     if (!DRIVE.folderId) DRIVE.folderId = await ensureDriveFolder();
     const meta     = JSON.stringify({ name: filename, parents: [DRIVE.folderId] });
     const boundary = 'n0t3xyz_boundary';
@@ -2087,7 +2387,6 @@ async function saveToDrive(filename) {
   }
 }
 
-// ── Open from Drive ──
 $('btn-drive-open').addEventListener('click', async () => {
   if (!DRIVE.connected) return notify('CONECTA DRIVE PRIMERO');
   openModal('modal-drive-open');
@@ -2140,7 +2439,6 @@ async function loadFromDrive(fileId, fileName) {
   }
 }
 
-// Init Drive after page load
 window.addEventListener('load', initDrive);
 
 // ── TOOLS DROPDOWN ────────────────────────────────────
@@ -2152,28 +2450,29 @@ $('btn-tools').addEventListener('click', e => {
 document.addEventListener('click', () => toolsMenu.classList.remove('open'));
 toolsMenu.addEventListener('click', e => e.stopPropagation());
 
-// Wire menu items → proxy buttons
-$('tmenu-sprint').addEventListener('click',  () => { toolsMenu.classList.remove('open'); $('btn-sprint').click();  });
-$('tmenu-timer').addEventListener('click',   () => { toolsMenu.classList.remove('open'); $('btn-timer').click();   });
-$('tmenu-session').addEventListener('click', () => { toolsMenu.classList.remove('open'); $('btn-session').click(); });
-$('tmenu-pomo').addEventListener('click',    () => { toolsMenu.classList.remove('open'); $('btn-pomo').click();    });
+$('tmenu-sprint').addEventListener('click',    () => { toolsMenu.classList.remove('open'); $('btn-sprint').click();    });
+$('tmenu-timer').addEventListener('click',     () => { toolsMenu.classList.remove('open'); $('btn-timer').click();     });
+$('tmenu-session').addEventListener('click',   () => { toolsMenu.classList.remove('open'); $('btn-session').click();   });
+$('tmenu-pomo').addEventListener('click',      () => { toolsMenu.classList.remove('open'); $('btn-pomo').click();      });
+$('tmenu-columns').addEventListener('click',   () => { toolsMenu.classList.remove('open'); $('btn-columns').click();   });
+$('tmenu-watermark').addEventListener('click', () => { toolsMenu.classList.remove('open'); $('btn-watermark').click(); });
 
-// Sync menu item labels with proxy button state
 function syncToolLabels() {
-  const pairs = [
-    ['btn-sprint','tmenu-sprint','Sprint'],
-    ['btn-timer','tmenu-timer','Timer'],
-    ['btn-session','tmenu-session','Sesión'],
-    ['btn-pomo','tmenu-pomo','Pomodoro'],
-  ];
-  pairs.forEach(([src, dst, def]) => {
+  [
+    ['btn-sprint',    'tmenu-sprint',    'Sprint'],
+    ['btn-timer',     'tmenu-timer',     'Timer'],
+    ['btn-session',   'tmenu-session',   'Sesión'],
+    ['btn-pomo',      'tmenu-pomo',      'Pomodoro'],
+    ['btn-columns',   'tmenu-columns',   'Columnas'],
+    ['btn-watermark', 'tmenu-watermark', 'Watermark'],
+  ].forEach(([src, dst, def]) => {
     const srcEl = $(src), dstEl = $(dst);
     dstEl.textContent = srcEl.textContent.trim() || def;
     dstEl.classList.toggle('active', srcEl.classList.contains('active'));
   });
 }
 const proxyObserver = new MutationObserver(syncToolLabels);
-['btn-sprint','btn-timer','btn-session','btn-pomo'].forEach(id =>
+['btn-sprint','btn-timer','btn-session','btn-pomo','btn-columns','btn-watermark'].forEach(id =>
   proxyObserver.observe($(id), { attributes: true, childList: true, characterData: true, subtree: true })
 );
 
@@ -2192,52 +2491,37 @@ $('topbar-show').addEventListener('click', () => {
 // ── DRIVE DROPDOWN ────────────────────────────────────
 const driveMenu = $('drive-menu');
 $('btn-drive-connect').addEventListener('click', e => {
-  // If connected, toggle dropdown instead of disconnecting directly
   if (DRIVE.connected) {
     e.stopPropagation();
     driveMenu.classList.toggle('open');
     return;
   }
-  // Not connected — trigger auth
   if (typeof google === 'undefined') { notify('GOOGLE API AÚN CARGANDO…'); return; }
   tokenClient.requestAccessToken({ prompt: '' });
-}, true); // capture phase so this runs before the old listener
+}, true);
 driveMenu.addEventListener('click', e => e.stopPropagation());
 document.addEventListener('click', () => driveMenu.classList.remove('open'));
 
-$('dmenu-save').addEventListener('click', () => {
-  driveMenu.classList.remove('open');
-  $('btn-drive-save').click();
-});
-$('dmenu-open').addEventListener('click', () => {
-  driveMenu.classList.remove('open');
-  $('btn-drive-open').click();
-});
+$('dmenu-save').addEventListener('click', () => { driveMenu.classList.remove('open'); $('btn-drive-save').click(); });
+$('dmenu-open').addEventListener('click', () => { driveMenu.classList.remove('open'); $('btn-drive-open').click(); });
 $('dmenu-disconnect').addEventListener('click', () => {
   driveMenu.classList.remove('open');
-  // Trigger the existing disconnect logic
-  DRIVE.connected = true; // ensure disconnect branch runs
+  DRIVE.connected = true;
   $('btn-drive-connect').click();
 });
 
 // ── NUKE 🔥 ───────────────────────────────────────────
 $('btn-nuke').addEventListener('click', () => openModal('modal-nuke'));
-
 $('nuke-confirm-btn').addEventListener('click', () => {
-  // 1. Revoke Drive if connected
   if (DRIVE.connected && typeof google !== 'undefined') {
     try { google.accounts.oauth2.revoke(DRIVE.token, ()=>{}); } catch(e) {}
   }
-  // 2. Clear editor
   editor.value = '';
-  // 3. Stop all timers
   if (S.timerActive)   stopTimer();
   if (S.sessionActive) endSession();
   if (S.sprintActive)  endSprint();
   if (P.active)        stopPomo();
-  // 4. Remove beforeunload guard so reload doesn't prompt
   window.onbeforeunload = null;
-  // 5. Reload
   location.reload();
 });
 
@@ -2258,7 +2542,7 @@ window.addEventListener('beforeunload', e=>{
 
 // ── INIT ───────────────────────────────────────────────
 updateCounters();
-setTimeout(applyMargins, 0); // after layout
+setTimeout(applyMargins, 0);
 editor.focus();
 </script>
 </body>
