@@ -794,18 +794,20 @@
 
 <!-- KEYS PANEL -->
 <div id="keys-panel">
-  <div class="keys-title">ATAJOS</div>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <div class="keys-title" style="margin-bottom:0;">ATAJOS</div>
+    <button id="btn-keys-close" style="background:none;border:none;color:var(--fg-dim);font-family:var(--ui-font);font-size:18px;cursor:pointer;line-height:1;padding:0 2px;">×</button>
+  </div>
   <div class="key-row"><span>Invertir colores</span>        <kbd>Ctrl+I</kbd></div>
-  <div class="key-row"><span>Modo máquina de escribir</span><kbd>Ctrl+T</kbd></div>
   <div class="key-row"><span>Copiar todo</span>             <kbd>Ctrl+Shift+C</kbd></div>
   <div class="key-row"><span>Exportar .txt</span>           <kbd>Ctrl+S</kbd></div>
   <div class="key-row"><span>Borrar todo</span>             <kbd>Ctrl+Shift+X</kbd></div>
   <div class="key-row"><span>Timer</span>                   <kbd>Ctrl+Shift+T</kbd></div>
   <div class="key-row"><span>Sprint</span>                  <kbd>Ctrl+Shift+P</kbd></div>
-  <div class="key-row"><span>Guardar en Drive</span>         <kbd>Ctrl+Shift+D</kbd></div>
+  <div class="key-row"><span>Guardar en Drive</span>        <kbd>Ctrl+Shift+D</kbd></div>
   <div class="key-row"><span>Pomodoro</span>                <kbd>Ctrl+Shift+O</kbd></div>
   <div class="key-row"><span>Sesión</span>                  <kbd>Ctrl+Shift+E</kbd></div>
-  <div class="key-row"><span>Cerrar panel</span>            <kbd>Ctrl+Shift+H</kbd></div>
+  <div class="key-row"><span>Panel atajos</span>            <kbd>Ctrl+Shift+H</kbd></div>
   <div class="key-row"><span>Finalizar sesión</span>        <kbd>escribir "finalizar"</kbd></div>
   <br>
   <div class="key-row" style="font-size:9px;color:var(--fg-dimmer);">*Solo funciona con sesión activa</div>
@@ -1890,7 +1892,7 @@ document.addEventListener('keydown', e=>{
   if (e.key==='Escape') {
     document.querySelectorAll('.modal-wrap.open').forEach(m=>closeModal(m.id));
     $('stats-overlay').classList.remove('open');
-    if (S.keysOpen) { S.keysOpen=false; $('keys-panel').classList.remove('open'); }
+    if (S.keysOpen) { closeKeysPanel(); }
   }
 });
 
@@ -2163,10 +2165,15 @@ $('topbar-show').addEventListener('click', () => {
 });
 
 // ── KEYS PANEL ────────────────────────────────────────
+function closeKeysPanel() {
+  S.keysOpen = false;
+  $('keys-panel').classList.remove('open');
+}
 $('btn-keys').addEventListener('click', () => {
   S.keysOpen = !S.keysOpen;
   $('keys-panel').classList.toggle('open', S.keysOpen);
 });
+$('btn-keys-close').addEventListener('click', closeKeysPanel);
 
 window.addEventListener('beforeunload', e=>{
   if (editor.value.trim().length>0) { e.preventDefault(); e.returnValue=''; }
