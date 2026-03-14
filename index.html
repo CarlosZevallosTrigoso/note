@@ -784,7 +784,7 @@
       <div class="stat">Párrafos <strong id="cnt-paragraphs">0</strong></div>
       <div class="stat">Bytes <strong id="cnt-bytes">0</strong></div>
       <div class="stat">Lectura <strong id="cnt-readtime">0 min</strong></div>
-      <div class="stat">Vel. escritura <strong id="cnt-wpm">— wpm</strong></div>
+      <div class="stat">Vel. <strong id="cnt-wpm">— pps</strong></div>
     </div>
     <div id="status-right">
       <span id="session-clock">00:00:00</span>
@@ -887,6 +887,26 @@
     <div class="modal-actions">
       <button class="btn" data-close="modal-sprint">CANCELAR</button>
       <button class="btn active" id="sprint-start-btn">INICIAR SPRINT</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT TXT -->
+<div class="modal-wrap" id="modal-export-txt">
+  <div class="modal-backdrop"></div>
+  <div class="modal-box">
+    <button class="modal-close-x" data-close="modal-export-txt">×</button>
+    <div class="modal-title">EXPORTAR .TXT</div>
+    <div class="modal-row">
+      <div class="modal-label">INCLUIR FIRMA CRIPTOGRÁFICA</div>
+      <select class="modal-input" id="txt-include-sig">
+        <option value="yes">Sí — añadir hash SHA-256 + timestamp</option>
+        <option value="no">No — solo texto</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" data-close="modal-export-txt">CANCELAR</button>
+      <button class="btn active" id="txt-export-btn">EXPORTAR</button>
     </div>
   </div>
 </div>
@@ -1081,7 +1101,7 @@ const S = {
   sprintGoal:   0,
   sprintBase:   0,
   sprintExpire: 'continue',
-  // wpm sliding window
+  // pps sliding window
   wpmWindow:  [],
   wpmTick:    null,
 };
@@ -1135,7 +1155,8 @@ function updateCounters() {
   $('cnt-bytes').textContent    = bytes(t).toLocaleString();
   $('cnt-readtime').textContent = w===0?'0 min':Math.ceil(w/200)+' min';
 
-  if (S.sessionActive) S.wpmWindow.push({t:Date.now(), w});
+  // always track words for speed calculation
+  S.wpmWindow.push({t:Date.now(), w});
 
   // sprint progress
   if (S.sprintActive) {
@@ -1149,20 +1170,21 @@ function updateCounters() {
   if (S.sessionActive && editor.value.trimEnd().endsWith('finalizar')) endSession();
 }
 
-// ── WPM ────────────────────────────────────────────────
+// ── PPS (palabras por segundo) ─────────────────────────
 S.wpmTick = setInterval(()=>{
   const now = Date.now();
-  S.wpmWindow = S.wpmWindow.filter(p => now-p.t < 30000);
+  // use a 10-second sliding window for responsive pps
+  S.wpmWindow = S.wpmWindow.filter(p => now-p.t < 10000);
   if (S.wpmWindow.length >= 2) {
     const f=S.wpmWindow[0], l=S.wpmWindow[S.wpmWindow.length-1];
-    const dm = (l.t-f.t)/60000;
-    const wpm = dm>0 ? Math.round(Math.max(0,l.w-f.w)/dm) : 0;
-    $('cnt-wpm').textContent = wpm+' wpm';
-    if (S.sessionActive && wpm>S.sessionPeakWPM) S.sessionPeakWPM=wpm;
+    const dSec = (l.t-f.t)/1000;
+    const pps = dSec>0 ? (Math.max(0,l.w-f.w)/dSec) : 0;
+    $('cnt-wpm').textContent = pps.toFixed(1)+' pps';
+    if (S.sessionActive && pps>S.sessionPeakWPM) S.sessionPeakWPM=pps;
   } else {
-    $('cnt-wpm').textContent = '— wpm';
+    $('cnt-wpm').textContent = '— pps';
   }
-}, 4000);
+}, 2000);
 
 // ── RULER ──────────────────────────────────────────────
 const ruler      = $('ruler');
@@ -1659,16 +1681,16 @@ function endSession() {
   const t    = editor.value;
   const w    = words(t);
   const gained  = Math.max(0, w - S.sessionStartWords);
-  const totalMin= S.sessionElapsed/60;
-  const avgWPM  = totalMin>0 ? Math.round(gained/totalMin) : 0;
+  const totalSec= S.sessionElapsed;
+  const avgPPS  = totalSec>0 ? (gained/totalSec).toFixed(1) : '0.0';
 
   $('s-time').textContent     = fmtDur(S.sessionElapsed);
   $('s-words').textContent    = gained.toLocaleString();
   $('s-chars').textContent    = t.length.toLocaleString();
   $('s-bytes').textContent    = bytes(t).toLocaleString();
   $('s-lines').textContent    = (t===''?1:t.split('\n').length).toLocaleString();
-  $('s-wpm-avg').textContent  = avgWPM+' wpm';
-  $('s-wpm-peak').textContent = S.sessionPeakWPM+' wpm';
+  $('s-wpm-avg').textContent  = avgPPS+' pps';
+  $('s-wpm-peak').textContent = S.sessionPeakWPM.toFixed(1)+' pps';
   $('s-start').textContent    = S.sessionStart.toLocaleTimeString();
   $('s-end').textContent      = end.toLocaleTimeString();
 
@@ -1764,12 +1786,24 @@ function endSprint() {
 }
 
 // ── EXPORT .TXT ────────────────────────────────────────
-$('btn-export').addEventListener('click', exportTxt);
-async function exportTxt() {
+$('btn-export').addEventListener('click', ()=>{
+  if (!editor.value.trim()) return notify('NADA QUE EXPORTAR');
+  openModal('modal-export-txt');
+});
+$('txt-export-btn').addEventListener('click', async ()=>{
+  const includeSig = $('txt-include-sig').value === 'yes';
+  closeModal('modal-export-txt');
+  await exportTxt(includeSig);
+});
+
+async function exportTxt(includeSig = true) {
   const t = editor.value;
   if (!t.trim()) return notify('NADA QUE EXPORTAR');
-  const sig = await buildSignature(t);
-  const out  = t + '\n\n' + sig;
+  let out = t;
+  if (includeSig) {
+    const sig = await buildSignature(t);
+    out = t + '\n\n' + sig;
+  }
   downloadText(out, 'nota-'+nowFilename()+'.txt');
 }
 
@@ -1921,7 +1955,7 @@ document.addEventListener('keydown', e=>{
   const ctrl = e.ctrlKey||e.metaKey;
   if (ctrl && e.key==='i')                         { e.preventDefault(); toggleInvert(); }
   if (ctrl && e.key==='t')                         { e.preventDefault(); toggleTypewriter(); }
-  if (ctrl && e.key==='s')                         { e.preventDefault(); exportTxt(); }
+  if (ctrl && e.key==='s')                         { e.preventDefault(); $('btn-export').click(); }
   if (ctrl && e.shiftKey && e.key==='C')           { e.preventDefault(); copyAll(); }
   if (ctrl && e.shiftKey && e.key==='X')           { e.preventDefault(); openModal('modal-clear'); }
   if (ctrl && e.shiftKey && e.key==='T')           { e.preventDefault(); openModal('modal-timer'); }
